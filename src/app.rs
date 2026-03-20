@@ -5,6 +5,8 @@ use crate::zfs::arc::{ArcStats, get_arc_stats};
 use crate::zfs::scrub::{ScrubStatus, get_scrub_status};
 use crate::zfs::snapshots::{Snapshot, list_snapshots, create_snapshot};
 
+use crate::net::{Interface, list_interfaces};
+
 use ratatui::widgets::TableState;
 
 pub struct App {
@@ -35,6 +37,9 @@ pub struct App {
     pub uptime: String,
 
     pub share_state: TableState,
+
+    pub interfaces: Vec<Interface>,
+    pub interface_state: TableState,
 }
 
 pub enum Mode {
@@ -47,6 +52,7 @@ pub enum View {
     ScrubStatus,
     Snapshots,
     Shares,
+    Network,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -78,6 +84,10 @@ impl App {
         let mut share_state = TableState::default();
         share_state.select(Some(0));
 
+        let mut interface_state = TableState::default();
+        interface_state.select(Some(0));
+        let interfaces = list_interfaces();
+
         let arc = get_arc_stats();
 
         let init = (arc.hit_ratio() * 10.0) as u64;
@@ -101,7 +111,13 @@ impl App {
             hostname,
             uptime: "00:00:00".into(),
             share_state,
+            interfaces,
+            interface_state,
         }
+    }
+
+    pub fn update_network(&mut self) {
+        self.interfaces = list_interfaces();
     }
 
     pub fn update_arc(&mut self) {

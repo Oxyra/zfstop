@@ -10,6 +10,7 @@ pub fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
         View::DatasetDetails => "Datasets",
         View::ScrubStatus => "Scrub",
         View::Shares => "Shares",
+        View::Network => "Interfaces",
     };
 
     let key_style = Style::default().fg(Color::Black).bg(Color::Yellow).bold();
@@ -25,6 +26,7 @@ pub fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
         (" S ", "Snapshots"),
         (" s ", "Scrub"),
         (" N ", "Shares"),
+        (" i ", "Interfaces"),
         (" ↵ ", "Status"),
         (" Esc ", "Back"),
         (" Q ", "Quit"),

@@ -2,6 +2,7 @@ mod app;
 mod ui;
 mod zfs;
 mod utils;
+mod net;
 
 use app::{App, View, Mode};
 use ui::draw;
@@ -71,6 +72,8 @@ fn main() -> Result<(), io::Error> {
                 for pool in &mut app.pools {
                     pool.update_io();
                 }
+
+                app.update_network();
 
                 if matches!(app.view, View::ScrubStatus) {
                     if let Some(i) = app.table_state.selected() {
@@ -155,7 +158,11 @@ fn run_app(
 
                             KeyCode::Char('n') => {
                                 app.view = View::Shares;
-                            }                           _ => {}
+                            }
+                            KeyCode::Char('i') => {
+                                app.view = View::Network;
+                            }
+                            _ => {}
                         }
                     }
 

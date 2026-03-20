@@ -7,6 +7,7 @@ pub mod status;
 pub mod footer;
 pub mod header;
 pub mod shares;
+pub mod network;
 
 use ratatui::{Frame, layout::*};
 use ratatui::widgets::{Block, Borders, BorderType, Paragraph, Clear, Padding};
@@ -23,6 +24,7 @@ use scrub::draw_scrub;
 use status::draw_status;
 use footer::draw_footer;
 use shares::draw_shares;
+use network::draw_network;
 
 pub fn draw(f: &mut Frame, app: &mut App) {
     let term_size = f.area();
@@ -64,6 +66,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 View::ScrubStatus => draw_scrub(f, app, chunks[4]),
                 View::Snapshots => draw_snapshots(f, app, chunks[4]),
                 View::Shares => draw_shares(f, app, chunks[4]),
+                View::Network => draw_network(f, app, chunks[4]),
             },
             Mode::PoolStatus => draw_status(f, app, chunks[4]),
         }
@@ -103,6 +106,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 View::ScrubStatus => draw_scrub(f, app, layout[1]),
                 View::Snapshots => draw_snapshots(f, app, layout[1]),
                 View::Shares => draw_shares(f, app, layout[1]),
+                View::Network => draw_network(f, app, layout[1]),
             },
             Mode::PoolStatus => draw_status(f, app, layout[1]),
         }
