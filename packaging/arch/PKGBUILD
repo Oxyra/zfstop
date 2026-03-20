@@ -1,0 +1,33 @@
+# Maintainer: Oxy <oxy@xtranit.co.th>
+pkgname=zfstop-git
+pkgver=29f05ad
+pkgrel=1
+pkgdesc="htop-like TUI for monitoring ZFS pools and datasets"
+arch=('x86_64')
+url="https://github.com/oxyra/zfstop"
+license=('MIT')
+
+depends=('zfs')
+makedepends=('rust' 'cargo')
+
+options=('!lto')
+
+source=("zfstop::git+file:///home/oxy/zfstop")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "$srcdir/zfstop"
+    git describe --tags --long --always | sed 's/^v//;s/-/./g'
+}
+
+build() {
+    cd "$srcdir/zfstop"
+    export CARGO_TARGET_DIR="$srcdir/target"
+    cargo build --release --locked
+}
+
+package() {
+    cd "$srcdir/zfstop"
+    install -Dm755 "$srcdir/target/release/zfstop" "$pkgdir/usr/bin/zfstop"
+    install -Dm644 README.md "$pkgdir/usr/share/doc/zfstop/README.md"
+}
