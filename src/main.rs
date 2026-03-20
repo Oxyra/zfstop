@@ -122,83 +122,12 @@ fn run_app(
             if let Event::Key(key) = event::read()? {
                 let mut app = app.lock().unwrap();
 
-                match app.input_mode {
-                    InputMode::Normal => {
-                        match key.code {
-                            KeyCode::Char('q') => return Ok(()),
-                            KeyCode::Up => app.previous(),
-                            KeyCode::Down => app.next(),
-                            KeyCode::Enter => app.open_selected_pool(),
-                            KeyCode::Esc => app.back(),
-
-                            KeyCode::Char('c') => {
-                                if let View::DatasetDetails = app.view {
-                                    app.start_create_snapshot();
-                                }
-                            },
-
-                            KeyCode::Char('r') => {
-                                if let View::DatasetDetails = app.view {
-                                    app.start_rename_dataset();
-                                }
-                            },
-
-                            KeyCode::Char('j') => match app.view {
-                                View::DatasetDetails => app.next_dataset(),
-                                View::Snapshots => app.next_snapshot(),
-                                _ => {}
-                            },
-                            KeyCode::Char('k') => match app.view {
-                                View::DatasetDetails => app.previous_dataset(),
-                                View::Snapshots => app.previous_snapshot(),
-                                _ => {}
-                            },
-                            KeyCode::Char('S') => app.open_snapshots(),
-                            KeyCode::Char('s') => app.open_scrub(),
-
-                            KeyCode::Char('n') => {
-                                app.view = View::Shares;
-                            }
-                            KeyCode::Char('i') => {
-                                app.view = View::Network;
-                            }
-                            _ => {}
-                        }
-                    }
-
-                    InputMode::CreatingSnapshot => {
-                        match key.code {
-                            KeyCode::Enter => {
-                                if let Err(err) = app.submit_snapshot() {
-                                    println!("Error creating snapshot: {}", err);
-                                }
-                            }
-                            KeyCode::Esc => app.cancel_snapshot(),
-                            KeyCode::Char(c) => app.input_buffer.push(c),
-                            KeyCode::Backspace => { app.input_buffer.pop(); }
-                            _ => {}
-                        }
-                    }
-
-                    InputMode::RenamingDataset => {
-                        match key.code {
-                            KeyCode::Enter => {
-                                if let Err(err) = app.submit_rename() {
-                                    println!("Error renaming dataset: {}", err);
-                                }
-                            }
-                            KeyCode::Esc => {
-                                app.input_mode = InputMode::Normal;
-                                app.input_buffer.clear();
-                            },
-                            KeyCode::Char(r) => app.input_buffer.push(r),
-                            KeyCode::Backspace => { app.input_buffer.pop(); }
-                            _ => {}
-                        }
-                    }
+                if app.input_mode == InputMode::Normal && key.code == KeyCode::Char('q') {
+                    return Ok(());
                 }
-            }
 
+                app.map_key(key.code);
+            }
         }
     }
 }
