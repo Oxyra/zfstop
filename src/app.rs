@@ -50,6 +50,7 @@ pub enum View {
 pub enum InputMode {
     Normal,
     CreatingSnapshot,
+    RenamingDataset,
 }
 
 impl App {
@@ -237,6 +238,28 @@ impl App {
     pub fn cancel_snapshot(&mut self) {
         self.input_mode = InputMode::Normal;
         self.input_buffer.clear();
+    }
+
+    pub fn start_rename_dataset(&mut self) {
+        if let Some(name) = self.selected_dataset_name() {
+            self.input_buffer = name;
+            self.input_mode = InputMode::RenamingDataset;
+        }
+    }
+    
+    pub fn submit_rename(&mut self) -> Result<(), String> {
+        if let Some(old_name) = self.selected_dataset_name() {
+            let new_name = self.input_buffer.trim().to_string();
+
+            println!("Renaming {} to {}", old_name, new_name);
+            
+            self.input_mode = InputMode::Normal;
+            self.input_buffer.clear();
+            self.load_datasets();
+            Ok(())
+        } else {
+            Err("No dataset selected".into())
+        }
     }
 
     pub fn next(&mut self) {

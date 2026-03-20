@@ -107,6 +107,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     draw_footer(f, app, main_layout[2]);
 
     draw_snapshot_input_popup(f, app);
+    draw_rename_input_popup(f, app);
 }
 
 fn draw_snapshot_input_popup(f: &mut Frame, app: &App) {
@@ -161,6 +162,49 @@ fn draw_snapshot_input_popup(f: &mut Frame, app: &App) {
 
     f.set_cursor_position((
         chunks[1].x + 6 + (app.input_buffer.len() as u16),
+        chunks[1].y,
+    ));
+}
+
+fn draw_rename_input_popup(f: &mut Frame, app: &App) {
+    if app.input_mode != InputMode::RenamingDataset { return; }
+
+    let area = f.area();
+    let popup_width = 60;
+    let popup_height = 8;
+    let vertical_margin = (area.height.saturating_sub(popup_height)) / 2;
+    let horizontal_margin = (area.width.saturating_sub(popup_width)) / 2;
+    let popup_area = Rect::new(horizontal_margin, vertical_margin, popup_width, popup_height);
+
+    f.render_widget(Clear, popup_area);
+
+    let block = Block::default()
+        .title(Line::from(" Rename Dataset "))
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(Style::default().fg(Color::Yellow))
+        .padding(Padding::horizontal(2));
+
+    let inner = block.inner(popup_area);
+    f.render_widget(block, popup_area);
+
+    let chunks = Layout::vertical([
+        Constraint::Length(1),
+        Constraint::Length(1),
+        Constraint::Min(0),
+    ]).split(inner);
+
+    let label = "Rename to: ";
+    f.render_widget(
+        Paragraph::new(Line::from(vec![
+            Span::styled(label, Style::default().fg(Color::Indexed(244))),
+            Span::styled(&app.input_buffer, Style::default().fg(Color::Yellow).bold()),
+        ])),
+        chunks[1],
+    );
+    
+    f.set_cursor_position((
+        chunks[1].x + 11 + (app.input_buffer.len() as u16),
         chunks[1].y,
     ));
 }

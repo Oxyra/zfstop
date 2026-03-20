@@ -134,6 +134,12 @@ fn run_app(
                                 }
                             },
 
+                            KeyCode::Char('r') => {
+                                if let View::DatasetDetails = app.view {
+                                    app.start_rename_dataset();
+                                }
+                            },
+
                             KeyCode::Char('j') => match app.view {
                                 View::DatasetDetails => app.next_dataset(),
                                 View::Snapshots => app.next_snapshot(),
@@ -159,6 +165,23 @@ fn run_app(
                             }
                             KeyCode::Esc => app.cancel_snapshot(),
                             KeyCode::Char(c) => app.input_buffer.push(c),
+                            KeyCode::Backspace => { app.input_buffer.pop(); }
+                            _ => {}
+                        }
+                    }
+
+                    InputMode::RenamingDataset => {
+                        match key.code {
+                            KeyCode::Enter => {
+                                if let Err(err) = app.submit_rename() {
+                                    println!("Error renaming dataset: {}", err);
+                                }
+                            }
+                            KeyCode::Esc => {
+                                app.input_mode = InputMode::Normal;
+                                app.input_buffer.clear();
+                            },
+                            KeyCode::Char(r) => app.input_buffer.push(r),
                             KeyCode::Backspace => { app.input_buffer.pop(); }
                             _ => {}
                         }
