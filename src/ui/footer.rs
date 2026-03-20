@@ -9,6 +9,7 @@ pub fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
         View::Snapshots => "Snapshots",
         View::DatasetDetails => "Datasets",
         View::ScrubStatus => "Scrub",
+        View::Shares => "Shares",
     };
 
     let key_style = Style::default().fg(Color::Black).bg(Color::Yellow).bold();
@@ -23,6 +24,7 @@ pub fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
     let hotkeys = vec![
         (" S ", "Snapshots"),
         (" s ", "Scrub"),
+        (" N ", "Shares"),
         (" ↵ ", "Status"),
         (" Esc ", "Back"),
         (" Q ", "Quit"),

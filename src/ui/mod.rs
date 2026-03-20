@@ -6,6 +6,7 @@ pub mod scrub;
 pub mod status;
 pub mod footer;
 pub mod header;
+pub mod shares;
 
 use ratatui::{Frame, layout::*};
 use ratatui::widgets::{Block, Borders, BorderType, Paragraph, Clear, Padding};
@@ -21,6 +22,7 @@ use arc::{draw_arc, draw_arc_graph, draw_arc_breakdown};
 use scrub::draw_scrub;
 use status::draw_status;
 use footer::draw_footer;
+use shares::draw_shares;
 
 pub fn draw(f: &mut Frame, app: &mut App) {
     let term_size = f.area();
@@ -61,6 +63,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 View::DatasetDetails => draw_datasets(f, app, chunks[4]),
                 View::ScrubStatus => draw_scrub(f, app, chunks[4]),
                 View::Snapshots => draw_snapshots(f, app, chunks[4]),
+                View::Shares => draw_shares(f, app, chunks[4]),
             },
             Mode::PoolStatus => draw_status(f, app, chunks[4]),
         }
@@ -99,6 +102,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
                 }
                 View::ScrubStatus => draw_scrub(f, app, layout[1]),
                 View::Snapshots => draw_snapshots(f, app, layout[1]),
+                View::Shares => draw_shares(f, app, layout[1]),
             },
             Mode::PoolStatus => draw_status(f, app, layout[1]),
         }

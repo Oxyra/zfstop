@@ -152,7 +152,10 @@ fn run_app(
                             },
                             KeyCode::Char('S') => app.open_snapshots(),
                             KeyCode::Char('s') => app.open_scrub(),
-                            _ => {}
+
+                            KeyCode::Char('n') => {
+                                app.view = View::Shares;
+                            }                           _ => {}
                         }
                     }
 

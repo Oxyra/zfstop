@@ -105,6 +105,8 @@ pub fn draw_dataset_details(f: &mut Frame, app: &App, area: Rect) {
             ("Used", &ds.used, "local"),
             ("Available", &ds.avail, "local"),
             ("Mountpoint", &ds.mountpoint, "local"),
+            ("NFS Share", &ds.sharenfs, "property"),
+            ("SMB Share", &ds.sharesmb, "property"),
             ("Compression", &ds.compression.0, ds.compression.1.as_str()),
             ("Recordsize", &ds.recordsize.0, ds.recordsize.1.as_str()),
             ("Ratio", &ds.compressratio, "local"),

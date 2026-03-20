@@ -33,6 +33,8 @@ pub struct App {
 
     pub hostname: String,
     pub uptime: String,
+
+    pub share_state: TableState,
 }
 
 pub enum Mode {
@@ -44,6 +46,7 @@ pub enum View {
     DatasetDetails,
     ScrubStatus,
     Snapshots,
+    Shares,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -72,6 +75,9 @@ impl App {
         let mut snapshot_state = TableState::default();
         snapshot_state.select(Some(0));
 
+        let mut share_state = TableState::default();
+        share_state.select(Some(0));
+
         let arc = get_arc_stats();
 
         let init = (arc.hit_ratio() * 10.0) as u64;
@@ -94,6 +100,7 @@ impl App {
             input_buffer: String::new(),
             hostname,
             uptime: "00:00:00".into(),
+            share_state,
         }
     }
 
@@ -108,6 +115,21 @@ impl App {
         }
     }
 
+    pub fn next_share(&mut self) {
+        let shared_count = self.datasets.iter().filter(|d| d.is_shares()).count();
+        if shared_count == 0 { return; }
+        let i = self.share_state.selected().unwrap_or(0);
+        let next = if i >= shared_count - 1 { 0 } else { i + 1 };
+        self.share_state.select(Some(next));
+    }
+
+    pub fn previous_share(&mut self) {
+        let shared_count = self.datasets.iter().filter(|d| d.is_shares()).count();
+        if shared_count == 0 { return; }
+        let i = self.share_state.selected().unwrap_or(0);
+        let prev = if i >= shared_count - 1 { 0 } else { i - 1 };
+        self.share_state.select(Some(prev));
+    }
 
     pub fn open_scrub(&mut self) {
         if let Some(i) = self.table_state.selected() {
@@ -174,6 +196,11 @@ impl App {
             .selected()
             .and_then(|i| self.datasets.get(i))
             .map(|d| d.name.clone())
+    }
+
+    pub fn selected_share(&self) -> Option<&Dataset> {
+        let shares: Vec<&Dataset> = self.datasets.iter().filter(|d| d.is_shares()).collect();
+        self.share_state.selected().and_then(|i| shares.get(i).copied())
     }
 
     pub fn load_snapshots(&mut self) {
@@ -314,6 +341,10 @@ impl App {
 
                 if matches!(self.view, View::Snapshots) {
                     self.load_snapshots();
+                }
+
+                if matches!(self.view, View::Shares) {
+                    self.datasets = list_datasets(&pool);
                 }
             }
         }
