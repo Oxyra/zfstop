@@ -1,0 +1,6 @@
+# Rust
+/target
+
+# Ignore everything in arch packaging except PKGBUILD
+packaging/arch/*
+!packaging/arch/PKGBUILD
