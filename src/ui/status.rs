@@ -35,7 +35,7 @@ pub fn draw_status(f: &mut Frame, app: &App, area: Rect) {
     );
 
     let lines: Vec<Line> = app.pool_status.iter().map(|line: &String| {
-        let trimmed = line.trim();
+        let trimmed = line.trim_start();
         
         if trimmed.contains("ONLINE") {
             Line::from(vec![
