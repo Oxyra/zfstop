@@ -3,7 +3,7 @@ use ratatui::widgets::*;
 use crate::app::App;
 
 pub fn draw_shares(f: &mut Frame, app: &mut App, area: Rect) {
-    let shared_datasets: Vec<_> = app.datasets
+    let shared_datasets: Vec<_> = app.zfs.datasets
         .iter()
         .filter(|d| d.is_shares())
         .collect();
@@ -45,7 +45,7 @@ pub fn draw_shares(f: &mut Frame, app: &mut App, area: Rect) {
             "SMB", 
             "MOUNTPOINT"
         ])
-        .style(Style::default().fg(Color::Indexed(39)).bold()) // Matches Snapshot Blue
+        .style(Style::default().fg(Color::Indexed(39)).bold())
         .bottom_margin(1)
     )
     .block(
@@ -65,5 +65,5 @@ pub fn draw_shares(f: &mut Frame, app: &mut App, area: Rect) {
         ])
     ]));
 
-    f.render_stateful_widget(table, area, &mut app.share_state);
+    f.render_stateful_widget(table, area, &mut app.zfs.share_state);
 }

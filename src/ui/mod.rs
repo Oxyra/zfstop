@@ -13,7 +13,7 @@ use ratatui::{Frame, layout::*};
 use ratatui::widgets::{Block, Borders, BorderType, Paragraph, Clear, Padding};
 use ratatui::style::{Style, Color};
 use ratatui::text::{Span, Line};
-use crate::app::{App, Mode, View, InputMode};
+use crate::app::{App, Nav, InputMode, InputAction};
 
 use header::draw_header;
 use pools::draw_pools;
@@ -24,102 +24,102 @@ use scrub::draw_scrub;
 use status::draw_status;
 use footer::draw_footer;
 use shares::draw_shares;
-use network::draw_network;
+use network::{draw_network, draw_network_details};
 
 pub fn draw(f: &mut Frame, app: &mut App) {
-    let term_size = f.area();
-    let vertical_mode = term_size.width < 120;
+    let area = f.area();
+    let vertical_mode = area.width < 120;
 
-    let main_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(1),
-            Constraint::Min(0),
-            Constraint::Length(1),
-        ])
-        .split(term_size);
+    let main_layout = Layout::vertical([
+        Constraint::Length(1), // Header
+        Constraint::Min(0),    // Body
+        Constraint::Length(1), // Footer
+    ]).split(area);
 
     draw_header(f, app, main_layout[0]);
+    draw_footer(f, app, main_layout[2]);
 
     let body_area = main_layout[1];
 
     if vertical_mode {
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Length(7),
-                Constraint::Length(5),
-                Constraint::Length(8),
-                Constraint::Min(12),
-                Constraint::Length(15),
-            ])
-            .split(body_area);
-
-        draw_arc(f, app, chunks[0]);
-        draw_arc_graph(f, app, chunks[1]);
-        draw_arc_breakdown(f, app, chunks[2]);
-        draw_pools(f, app, chunks[3]);
-
-        match app.mode {
-            Mode::Dashboard => match app.view {
-                View::DatasetDetails => draw_datasets(f, app, chunks[4]),
-                View::ScrubStatus => draw_scrub(f, app, chunks[4]),
-                View::Snapshots => draw_snapshots(f, app, chunks[4]),
-                View::Shares => draw_shares(f, app, chunks[4]),
-                View::Network => draw_network(f, app, chunks[4]),
-            },
-            Mode::PoolStatus => draw_status(f, app, chunks[4]),
-        }
+        draw_vertical_layout(f, app, body_area);
     } else {
-        let layout = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(35), Constraint::Percentage(65)])
-            .split(body_area);
-
-        let left_layout = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Length(6),
-                Constraint::Length(8),
-                Constraint::Length(10),
-                Constraint::Min(0),
-            ])
-            .split(layout[0]);
-
-        draw_arc(f, app, left_layout[0]);
-        draw_arc_graph(f, app, left_layout[1]);
-        draw_arc_breakdown(f, app, left_layout[2]);
-        draw_pools(f, app, left_layout[3]);
-
-        match app.mode {
-            Mode::Dashboard => match app.view {
-                View::DatasetDetails => {
-                    let right_layout = Layout::vertical([
-                        Constraint::Percentage(70),
-                        Constraint::Percentage(30),
-                    ])
-                    .split(layout[1]);
-
-                    draw_datasets(f, app, right_layout[0]);
-                    draw_dataset_details(f, app, right_layout[1]);
-                }
-                View::ScrubStatus => draw_scrub(f, app, layout[1]),
-                View::Snapshots => draw_snapshots(f, app, layout[1]),
-                View::Shares => draw_shares(f, app, layout[1]),
-                View::Network => draw_network(f, app, layout[1]),
-            },
-            Mode::PoolStatus => draw_status(f, app, layout[1]),
-        }
+        draw_horizontal_layout(f, app, body_area);
     }
-
-    draw_footer(f, app, main_layout[2]);
 
     draw_snapshot_input_popup(f, app);
     draw_rename_input_popup(f, app);
 }
 
+fn draw_horizontal_layout(f: &mut Frame, app: &mut App, area: Rect) {
+    let chunks = Layout::horizontal([
+        Constraint::Percentage(35), // Sidebar
+        Constraint::Percentage(65), // Detail Pane
+    ]).split(area);
+
+    let left_layout = Layout::vertical([
+        Constraint::Length(6),  // ARC
+        Constraint::Length(8),  // Graph
+        Constraint::Length(10), // Breakdown
+        Constraint::Min(0),     // Pools
+    ]).split(chunks[0]);
+
+    draw_arc(f, app, left_layout[0]);
+    draw_arc_graph(f, app, left_layout[1]);
+    draw_arc_breakdown(f, app, left_layout[2]);
+    draw_pools(f, app, left_layout[3]);
+
+    match app.nav {
+        Nav::Datasets => {
+            let right_layout = Layout::vertical([
+                Constraint::Percentage(70),
+                Constraint::Percentage(30),
+            ]).split(chunks[1]);
+            draw_datasets(f, app, right_layout[0]);
+            draw_dataset_details(f, app, right_layout[1]);
+        }
+        Nav::PoolStatus => draw_status(f, app, chunks[1]),
+        Nav::Snapshots  => draw_snapshots(f, app, chunks[1]),
+        Nav::Scrub      => draw_scrub(f, app, chunks[1]),
+        Nav::Shares     => draw_shares(f, app, chunks[1]),
+        Nav::Network    => {
+            let right_layout = Layout::vertical([
+                Constraint::Percentage(65),
+                Constraint::Percentage(35),
+            ]).split(chunks[1]);
+            draw_network(f, app, right_layout[0]);
+            draw_network_details(f, app, right_layout[1]);
+        }
+    }
+}
+
+fn draw_vertical_layout(f: &mut Frame, app: &mut App, area: Rect) {
+    let chunks = Layout::vertical([
+        Constraint::Length(7),  // ARC
+        Constraint::Length(8),  // ARC Breakdown/Graph
+        Constraint::Min(10),    // Pools
+        Constraint::Length(15), // Detail View
+    ]).split(area);
+
+    draw_arc(f, app, chunks[0]);
+    draw_arc_breakdown(f, app, chunks[1]);
+    draw_pools(f, app, chunks[2]);
+
+    match app.nav {
+        Nav::Datasets   => draw_datasets(f, app, chunks[3]),
+        Nav::PoolStatus => draw_status(f, app, chunks[3]),
+        Nav::Snapshots  => draw_snapshots(f, app, chunks[3]),
+        Nav::Scrub      => draw_scrub(f, app, chunks[3]),
+        Nav::Shares     => draw_shares(f, app, chunks[3]),
+        Nav::Network    => draw_network(f, app, chunks[3]),
+    }
+}
+
 fn draw_snapshot_input_popup(f: &mut Frame, app: &App) {
-    if app.input_mode != InputMode::CreatingSnapshot { return; }
+    if app.input.mode != InputMode::Editing
+        || app.input.action != Some(InputAction::CreatingSnapshot) {
+        return;
+    }
 
     let area = f.area();
     let popup_width = 60;
@@ -131,8 +131,8 @@ fn draw_snapshot_input_popup(f: &mut Frame, app: &App) {
 
     f.render_widget(Clear, popup_area); 
 
-    let dataset_name = app.datasets
-        .get(app.dataset_state.selected().unwrap_or(0))
+    let dataset_name = app.zfs.datasets
+        .get(app.zfs.dataset_state.selected().unwrap_or(0))
         .map(|d| d.name.as_str())
         .unwrap_or("Unknown");
 
@@ -163,19 +163,22 @@ fn draw_snapshot_input_popup(f: &mut Frame, app: &App) {
     f.render_widget(
         Paragraph::new(Line::from(vec![
             Span::styled("Name: ", Style::default().fg(Color::Indexed(244))),
-            Span::styled(&app.input_buffer, Style::default().fg(Color::Yellow).bold()),
+            Span::styled(&app.input.buffer, Style::default().fg(Color::Yellow).bold()),
         ])),
         chunks[1],
     );
 
     f.set_cursor_position((
-        chunks[1].x + 6 + (app.input_buffer.len() as u16),
+        chunks[1].x + 6 + (app.input.buffer.len() as u16),
         chunks[1].y,
     ));
 }
 
 fn draw_rename_input_popup(f: &mut Frame, app: &App) {
-    if app.input_mode != InputMode::RenamingDataset { return; }
+    if app.input.mode != InputMode::Editing
+        || app.input.action != Some(InputAction::RenamingDataset) {
+        return;
+    }
 
     let area = f.area();
     let popup_width = 60;
@@ -206,13 +209,13 @@ fn draw_rename_input_popup(f: &mut Frame, app: &App) {
     f.render_widget(
         Paragraph::new(Line::from(vec![
             Span::styled(label, Style::default().fg(Color::Indexed(244))),
-            Span::styled(&app.input_buffer, Style::default().fg(Color::Yellow).bold()),
+            Span::styled(&app.input.buffer, Style::default().fg(Color::Yellow).bold()),
         ])),
         chunks[1],
     );
     
     f.set_cursor_position((
-        chunks[1].x + 11 + (app.input_buffer.len() as u16),
+        chunks[1].x + 11 + (app.input.buffer.len() as u16),
         chunks[1].y,
     ));
 }

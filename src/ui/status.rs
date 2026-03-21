@@ -3,7 +3,7 @@ use ratatui::widgets::*;
 use crate::app::App;
 
 pub fn draw_status(f: &mut Frame, app: &App, area: Rect) {
-    let selected_pool_name = app.pools.get(app.table_state.selected().unwrap_or(0))
+    let selected_pool_name = app.zfs.pools.get(app.zfs.pool_state.selected().unwrap_or(0))
         .map(|p| p.name.as_str())
         .unwrap_or("Unknown");
 
@@ -34,7 +34,7 @@ pub fn draw_status(f: &mut Frame, app: &App, area: Rect) {
         chunks[0],
     );
 
-    let lines: Vec<Line> = app.pool_status.iter().map(|line: &String| {
+    let lines: Vec<Line> = app.zfs.pool_status.iter().map(|line: &String| {
         let trimmed = line.trim_start();
         
         if trimmed.contains("ONLINE") {

@@ -57,5 +57,3 @@ pub fn create_snapshot(dataset: &str, name: &str) -> Result<(), String> {
         Err(err.trim().to_string())
     }
 }
-
-//pub fn delete_snapshot()

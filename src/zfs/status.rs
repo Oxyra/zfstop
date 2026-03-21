@@ -22,7 +22,7 @@ pub fn get_pool_status(pool: &str) -> Vec<String> {
                 t.contains("ONLINE") || 
                 t.contains("DEGRADED") || 
                 t.contains("FAULTED") ||
-                line.starts_with("  ") || line.starts_with('\t')
+                line.starts_with(' ') || line.starts_with('\t')
             )
         })
         .map(|line| line.replace('\t', "    ")) 

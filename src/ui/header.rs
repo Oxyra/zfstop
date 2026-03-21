@@ -19,7 +19,7 @@ pub fn draw_header(f: &mut Frame, app: &App, area: Rect) {
         Paragraph::new(Line::from(vec![
             Span::styled(" HOST ", Style::default().bg(Color::Indexed(240)).fg(Color::White)),
             Span::raw(" "),
-            Span::styled(&app.hostname, Style::default().fg(Color::Cyan).bold()),
+            Span::styled(&app.system.hostname, Style::default().fg(Color::Cyan).bold()),
         ])),
         chunks[1],
     );
@@ -27,7 +27,7 @@ pub fn draw_header(f: &mut Frame, app: &App, area: Rect) {
     let now = chrono::Local::now().format("%H:%M:%S").to_string();
     let stats = Line::from(vec![
         Span::styled(" UP ", Style::default().fg(Color::Indexed(244))),
-        Span::styled(&app.uptime, Style::default().fg(Color::White)),
+        Span::styled(&app.system.uptime, Style::default().fg(Color::White)),
         Span::raw("  "),
         Span::styled(" TIME ", Style::default().fg(Color::Indexed(244))),
         Span::styled(now, Style::default().fg(Color::White)),

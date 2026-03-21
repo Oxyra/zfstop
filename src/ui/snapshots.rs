@@ -4,12 +4,12 @@ use crate::app::App;
 use crate::utils::format_age;
 
 pub fn draw_snapshots(f: &mut Frame, app: &mut App, area: Rect) {
-    let dataset_name = app.datasets
-        .get(app.dataset_state.selected().unwrap_or(0))
+    let dataset_name = app.zfs.datasets
+        .get(app.zfs.dataset_state.selected().unwrap_or(0))
         .map(|d| d.name.clone())
         .unwrap_or_else(|| "none".to_string());
 
-    let rows = app.snapshots.iter().map(|s| {
+    let rows = app.zfs.snapshots.iter().map(|s| {
         let parts: Vec<&str> = s.name.split('@').collect();
         let dataset = parts.get(0).unwrap_or(&"");
         let snapshot = parts.get(1).unwrap_or(&"");
@@ -46,7 +46,7 @@ pub fn draw_snapshots(f: &mut Frame, app: &mut App, area: Rect) {
             .title(Line::from(vec![
                 Span::styled(" Snapshots ", Style::default().fg(Color::Cyan)),
                 Span::styled(format!(" {} ", dataset_name), Style::default().fg(Color::White).bold()),
-                Span::styled(format!("({} total) ", app.snapshots.len()), Style::default().fg(Color::Indexed(240))),
+                Span::styled(format!("({} total) ", app.zfs.snapshots.len()), Style::default().fg(Color::Indexed(240))),
             ]).alignment(Alignment::Left))
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
@@ -59,5 +59,5 @@ pub fn draw_snapshots(f: &mut Frame, app: &mut App, area: Rect) {
         ])
     ]));
 
-    f.render_stateful_widget(table, area, &mut app.snapshot_state);
+    f.render_stateful_widget(table, area, &mut app.zfs.snapshot_state);
 }

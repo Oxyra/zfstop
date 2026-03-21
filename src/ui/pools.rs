@@ -4,7 +4,7 @@ use crate::app::App;
 use crate::utils::format_bytes;
 
 pub fn draw_pools(f: &mut Frame, app: &App, area: Rect) {
-    let selected_idx = app.table_state.selected().unwrap_or(0);
+    let selected_idx = app.zfs.pool_state.selected().unwrap_or(0);
 
     let main_block = Block::default()
         .title(Line::from(" ZFS Pools ").alignment(Alignment::Left))
@@ -15,15 +15,15 @@ pub fn draw_pools(f: &mut Frame, app: &App, area: Rect) {
     let inner_area = main_block.inner(area);
     f.render_widget(main_block, area);
 
-    let pool_count = app.pools.len().max(1);
-    let constraints: Vec<Constraint> = app.pools
+    let pool_count = app.zfs.pools.len().max(1);
+    let constraints: Vec<Constraint> = app.zfs.pools
         .iter()
         .map(|_| Constraint::Ratio(1, pool_count as u32)) 
         .collect();
 
     let pool_chunks = Layout::vertical(constraints).split(inner_area);
 
-    for (i, pool) in app.pools.iter().enumerate() {
+    for (i, pool) in app.zfs.pools.iter().enumerate() {
         if i >= pool_chunks.len() { break; }
         
         let pool_area = pool_chunks[i];

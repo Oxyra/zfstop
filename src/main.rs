@@ -4,10 +4,8 @@ mod zfs;
 mod utils;
 mod net;
 
-use app::{App, View, Mode};
+use app::{App, InputMode};
 use ui::draw;
-
-use crate::app::InputMode;
 
 use std::{io, time::Duration};
 use std::sync::{Arc, Mutex};
@@ -37,57 +35,24 @@ fn main() -> Result<(), io::Error> {
 
     let app = Arc::new(Mutex::new(App::new()));
 
-    app.lock().unwrap().load_datasets();
+    {
+        let mut app_locked = app.lock().unwrap();
+
+        if app_locked.zfs.pools.is_empty() {
+            app_locked.zfs.pools = zfs::pools::list_pools();
+        }
+
+        let nav = app_locked.nav;
+        app_locked.zfs.on_pool_changed(nav);
+    }
 
     let metrics_app = Arc::clone(&app);
 
     thread::spawn(move || {
         loop {
-            {
-                let mut app = metrics_app.lock().unwrap();
-
-                if let Ok(uptime_str) = std::fs::read_to_string("/proc/uptime") {
-                    if let Some(seconds_str) = uptime_str.split_whitespace().next() {
-                        if let Ok(seconds) = seconds_str.parse::<f32>() {
-                            let s = seconds as u64;
-                            let days = s / 86400;
-                            let hours = (s % 86400) / 3600;
-                            let minutes = (s % 3600) / 60;
-
-                            app.uptime = if days > 0 {
-                                format!("{}d {:02}h {:02}m", days, hours, minutes)
-                            } else {
-                                format!("{:02}h {:02}m", hours, minutes)
-                            };
-                        }
-                    }
-                }
-
-                if app.pools.is_empty() {
-                    app.pools = zfs::pools::list_pools();
-                }
-
-                app.update_arc();
-
-                for pool in &mut app.pools {
-                    pool.update_io();
-                }
-
-                app.update_network();
-
-                if matches!(app.view, View::ScrubStatus) {
-                    if let Some(i) = app.table_state.selected() {
-                        let pool = &app.pools[i].name;
-                        app.scrub = zfs::scrub::get_scrub_status(pool);
-                    }
-                }
-
-                if matches!(app.mode, Mode::PoolStatus) {
-                    if let Some(i) = app.table_state.selected() {
-                        let pool_name = &app.pools[i].name;
-                        app.pool_status = zfs::status::get_pool_status(pool_name);
-                    }
-                }
+            if let Ok(mut app) = metrics_app.lock() {
+                app.system.update_uptime();
+                app.tick();
             }
 
             thread::sleep(Duration::from_secs(1));
@@ -118,11 +83,11 @@ fn run_app(
             terminal.draw(|f| draw(f, &mut app_locked))?;
         }
 
-        if event::poll(Duration::from_millis(200))? {
+        if event::poll(Duration::from_millis(50))? {
             if let Event::Key(key) = event::read()? {
                 let mut app = app.lock().unwrap();
 
-                if app.input_mode == InputMode::Normal && key.code == KeyCode::Char('q') {
+                if app.input.mode == InputMode::Normal && key.code == KeyCode::Char('q') {
                     return Ok(());
                 }
 

@@ -3,8 +3,17 @@ use ratatui::widgets::*;
 use crate::app::App;
 
 pub fn draw_scrub(f: &mut Frame, app: &App, area: Rect) {
+    let selected_pool_name = app.zfs.pool_state.selected()
+        .and_then(|i| app.zfs.pools.get(i))
+        .map(|p| p.name.as_str())
+        .unwrap_or("No Pool Selected");
+
     let block = Block::default()
-        .title(Line::from(" Pool Scrub Status ").alignment(Alignment::Left))
+        .title(Line::from(vec![
+            Span::raw(" Pool: "),
+            Span::styled(format!(" {} ", selected_pool_name), Style::default().fg(Color::Black).bg(Color::Indexed(39)).bold()),
+            Span::raw(" "),
+        ]))
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(Style::default().fg(Color::Indexed(240)));
@@ -12,38 +21,25 @@ pub fn draw_scrub(f: &mut Frame, app: &App, area: Rect) {
     let inner = block.inner(area);
     f.render_widget(block, area);
 
-    if let Some(scrub) = &app.scrub {
+    if let Some(scrub) = &app.zfs.scrub {
         let layout = Layout::vertical([
-            Constraint::Length(1),
-            Constraint::Length(1),
-            Constraint::Length(2),
-            Constraint::Length(1),
-            Constraint::Min(0),
+            Constraint::Length(1), // Status Line
+            Constraint::Length(1), // Spacer
+            Constraint::Length(2), // Gauge
+            Constraint::Length(1), // Spacer
+            Constraint::Min(0),    // Stats Table
         ])
         .margin(1)
         .split(inner);
 
-        let header = Layout::horizontal([
-            Constraint::Min(0),
-            Constraint::Length(20),
-        ]).split(layout[0]);
-
-        f.render_widget(
-            Paragraph::new(Line::from(vec![
-                Span::styled(" POOL ", Style::default().bg(Color::Indexed(39)).fg(Color::Black).bold()),
-                Span::raw(" "),
-                Span::styled(&scrub.pool, Style::default().fg(Color::White).bold()),
-            ])),
-            header[0],
-        );
-
         let status_color = if scrub.state.contains("progress") { Color::Green } else { Color::Yellow };
         f.render_widget(
             Paragraph::new(Line::from(vec![
+                Span::styled("STATUS: ", Style::default().fg(Color::Indexed(244))),
                 Span::styled("● ", Style::default().fg(status_color)),
-                Span::styled(&scrub.state, Style::default().fg(Color::White)),
-            ])).alignment(Alignment::Right),
-            header[1],
+                Span::styled(scrub.state.to_uppercase(), Style::default().fg(Color::White).bold()),
+            ])),
+            layout[0],
         );
 
         let gauge = Gauge::default()
@@ -53,26 +49,18 @@ pub fn draw_scrub(f: &mut Frame, app: &App, area: Rect) {
             .use_unicode(true);
         f.render_widget(gauge, layout[2]);
 
-        let error_color = if scrub.repaired != "0B" { Color::Red } else { Color::Indexed(244) };
-        
-        let props = vec![
-            ("Scanned", &scrub.scanned, Color::White),
-            ("Issued", &scrub.issued, Color::White),
-            ("Speed", &scrub.speed, Color::Indexed(111)),
-            ("Repaired", &scrub.repaired, error_color),
-            ("Total Size", &scrub.total, Color::White),
-            ("Time Left", &scrub.eta, Color::Indexed(214)),
+        let error_color = if scrub.repaired != "0B" { Color::Red } else { Color::Green };
+        let rows = vec![
+            Row::new(vec![Cell::from("Scanned"), Cell::from(scrub.scanned.as_str()).style(Style::default().bold())]),
+            Row::new(vec![Cell::from("Issued"), Cell::from(scrub.issued.as_str()).style(Style::default().bold())]),
+            Row::new(vec![Cell::from("Speed"), Cell::from(scrub.speed.as_str()).style(Style::default().fg(Color::Indexed(111)))]),
+            Row::new(vec![Cell::from("Repaired"), Cell::from(scrub.repaired.as_str()).style(Style::default().fg(error_color).bold())]),
+            Row::new(vec![Cell::from("ETA"), Cell::from(scrub.eta.as_str()).style(Style::default().fg(Color::Indexed(214)).bold())]),
         ];
 
-        let rows = props.into_iter().map(|(label, val, color)| {
-            Row::new(vec![
-                Cell::from(label).style(Style::default().fg(Color::Indexed(244))),
-                Cell::from(val.as_str()).style(Style::default().fg(color).bold()),
-            ])
-        });
-
         let table = Table::new(rows, [Constraint::Length(12), Constraint::Min(0)])
-            .column_spacing(2);
+            .column_spacing(2)
+            .style(Style::default().fg(Color::Indexed(250)));
 
         f.render_widget(table, layout[4]);
 
@@ -80,10 +68,15 @@ pub fn draw_scrub(f: &mut Frame, app: &App, area: Rect) {
         f.render_widget(
             Paragraph::new(vec![
                 Line::from(""),
-                Line::from(Span::styled("󰄬 No scrub in progress", Style::default().fg(Color::Indexed(240)))),
-                Line::from(Span::styled("Idle", Style::default().fg(Color::Indexed(237)))),
+                Line::from(vec![
+                    Span::styled(" 󰄬 ", Style::default().fg(Color::Green)),
+                    Span::styled(selected_pool_name, Style::default().fg(Color::White).bold()),
+                    Span::raw(" is healthy"),
+                ]),
+                Line::from(Span::styled("No scrub in progress", Style::default().fg(Color::Indexed(240)))),
             ])
-            .alignment(Alignment::Center),
+            .alignment(Alignment::Center)
+            .block(Block::default().padding(Padding::vertical(2))),
             inner,
         );
     }

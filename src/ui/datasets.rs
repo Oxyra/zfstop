@@ -3,14 +3,14 @@ use ratatui::widgets::*;
 use crate::app::App;
 
 pub fn draw_datasets(f: &mut Frame, app: &mut App, area: Rect) {
-    let selected_idx = app.dataset_state.selected().unwrap_or(0);
+    let selected_idx = app.zfs.dataset_state.selected().unwrap_or(0);
     
-    let rows = app.datasets.iter().enumerate().map(|(i, d)| {
-        let is_parent = app.datasets.iter().any(|x| x.name.starts_with(&(d.name.clone() + "/")));
+    let rows = app.zfs.datasets.iter().enumerate().map(|(i, d)| {
+        let is_parent = app.zfs.datasets.iter().any(|x| x.name.starts_with(&(d.name.clone() + "/")));
         let is_selected = i == selected_idx;
 
         let mut display_name = d.name.clone();
-        if let Some(pool) = app.pools.get(app.table_state.selected().unwrap_or_default()) {
+        if let Some(pool) = app.zfs.pools.get(app.zfs.pool_state.selected().unwrap_or_default()) {
             if d.name != pool.name {
                 let path_without_pool = d.name.trim_start_matches(&pool.name).trim_start_matches('/');
                 let depth = path_without_pool.split('/').count();
@@ -27,7 +27,7 @@ pub fn draw_datasets(f: &mut Frame, app: &mut App, area: Rect) {
         let name_style = if is_selected {
             Style::default().fg(Color::Cyan).bold()
         } else if is_parent {
-            Style::default().fg(Color::Indexed(39)) // Bright blue for folders
+            Style::default().fg(Color::Indexed(39))
         } else {
             Style::default().fg(Color::White)
         };
@@ -71,12 +71,12 @@ pub fn draw_datasets(f: &mut Frame, app: &mut App, area: Rect) {
     .row_highlight_style(Style::default().bg(Color::Indexed(235)))
     .highlight_symbol(" ");
 
-    f.render_stateful_widget(table, area, &mut app.dataset_state);
+    f.render_stateful_widget(table, area, &mut app.zfs.dataset_state);
 }
 
 pub fn draw_dataset_details(f: &mut Frame, app: &App, area: Rect) {
-    let selected_idx = app.dataset_state.selected().unwrap_or(0);
-    let dataset = app.datasets.get(selected_idx);
+    let selected_idx = app.zfs.dataset_state.selected().unwrap_or(0);
+    let dataset = app.zfs.datasets.get(selected_idx);
 
     let block = Block::default()
         .title(Line::from(" Selection Details ").alignment(Alignment::Left))

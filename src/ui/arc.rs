@@ -4,7 +4,7 @@ use crate::app::App;
 use crate::utils::format_bytes;
 
 pub fn draw_arc(f: &mut Frame, app: &App, area: Rect) {
-    let arc = &app.arc;
+    let arc = &app.system.arc;
     let block = Block::default()
         .title(Line::from(" ARC Cache ").alignment(Alignment::Left))
         .borders(Borders::ALL)
@@ -57,7 +57,7 @@ pub fn draw_arc(f: &mut Frame, app: &App, area: Rect) {
 }
 
 pub fn draw_arc_breakdown(f: &mut Frame, app: &App, area: Rect) {
-    let arc = &app.arc;
+    let arc = &app.system.arc;
     let (d_data, d_meta, p_data, p_meta) = arc.breakdown();
 
     let block = Block::default()
@@ -116,7 +116,7 @@ pub fn draw_arc_breakdown(f: &mut Frame, app: &App, area: Rect) {
 }
 
 pub fn draw_arc_graph(f: &mut Frame, app: &App, area: Rect) {
-    let raw_val = app.arc_history.last().cloned().unwrap_or(0);
+    let raw_val = app.system.arc_history.last().cloned().unwrap_or(0);
 
     let current_hit = raw_val as f64 / 10.0;
     
@@ -141,7 +141,7 @@ pub fn draw_arc_graph(f: &mut Frame, app: &App, area: Rect) {
                 .border_type(BorderType::Rounded)
                 .border_style(Style::default().fg(Color::Indexed(240)))
         )
-        .data(&app.arc_history)
+        .data(&app.system.arc_history)
         .max(1000) 
         .style(Style::default().fg(spark_color));
 
