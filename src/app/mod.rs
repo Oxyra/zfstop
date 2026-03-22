@@ -18,6 +18,7 @@ pub use self::state::{
 };
 
 use crate::app::view::ActiveView;
+use crate::app::state::Dialog;
 use crate::zfs::snapshots::{create_snapshot, destroy_snapshot};
 use crossterm::event::KeyCode;
 
@@ -55,6 +56,13 @@ impl App {
 
     pub fn map_key(&mut self, key: KeyCode) {
         handlers::handle_key(self, key);
+    }
+
+    pub fn show_error(&mut self, msg: String) {
+        self.dialog = Dialog::Error {
+            title: "Error".into(),
+            message: msg,
+        };
     }
 
     pub fn submit_destroy_snapshot(&mut self, name: String) -> Result<(), String> {

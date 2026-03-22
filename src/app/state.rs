@@ -90,6 +90,11 @@ pub enum Dialog {
         message: String,
         action: ConfirmAction,
     },
+
+    Error {
+        title: String,
+        message: String,
+    },
 }
 
 #[derive(Clone)]

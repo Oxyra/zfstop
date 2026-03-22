@@ -13,6 +13,7 @@ use ratatui::{Frame, layout::*};
 use ratatui::widgets::{Block, Borders, BorderType, Paragraph, Clear};
 use crate::app::{App, Nav};
 use crate::app::state::Dialog;
+use crate::app::utils::centered_rect;
 
 use header::draw_header;
 use pools::draw_pools;
@@ -113,55 +114,93 @@ fn draw_vertical_layout(f: &mut Frame, app: &mut App, area: Rect) {
     }
 }
 
+use ratatui::style::{Style, Color};
+use ratatui::widgets::{Padding};
+
 fn draw_dialog(f: &mut Frame, app: &App) {
     if matches!(app.dialog, Dialog::None) {
         return;
     }
 
     let area = f.area();
-
-    let popup = Rect::new(
-        area.width / 4,
-        area.height / 3,
-        area.width / 2,
-        7,
-    );
+    let popup = centered_rect(50, 30, area);
 
     f.render_widget(Clear, popup);
 
     match &app.dialog {
         Dialog::Input { title, label, buffer, .. } => {
             let block = Block::default()
-                .title(title.as_str())
+                .title(format!(" {} ", title))
                 .borders(Borders::ALL)
-                .border_type(BorderType::Rounded);
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(Color::Cyan))
+                .padding(Padding::horizontal(2));
 
             let inner = block.inner(popup);
             f.render_widget(block, popup);
 
-            let text = Paragraph::new(format!("{}: {}", label, buffer));
-            f.render_widget(text, inner);
+            let layout = Layout::vertical([
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Min(0),
+            ])
+            .split(inner);
 
+            let text = Paragraph::new(format!("{}:", label));
+            f.render_widget(text, layout[0]);
+
+            let input = Paragraph::new(buffer.as_str())
+                .style(Style::default().fg(Color::Yellow));
+            f.render_widget(input, layout[1]);
+
+            // cursor
             f.set_cursor_position((
-                inner.x + label.len() as u16 + 2 + buffer.len() as u16,
-                inner.y,
+                layout[1].x + buffer.len() as u16,
+                layout[1].y,
             ));
         }
 
         Dialog::Confirm { title, message, .. } => {
             let block = Block::default()
-                .title(title.as_str())
+                .title(format!(" {} ", title))
                 .borders(Borders::ALL)
-                .border_type(BorderType::Rounded);
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(Color::Red))
+                .padding(Padding::horizontal(2));
 
             let inner = block.inner(popup);
             f.render_widget(block, popup);
 
-            let text = Paragraph::new(format!("{}\n\n[y] Yes  [n] No", message));
+            let layout = Layout::vertical([
+                Constraint::Min(1),
+                Constraint::Length(1),
+            ])
+            .split(inner);
+
+            let text = Paragraph::new(message.as_str());
+            f.render_widget(text, layout[0]);
+
+            let hint = Paragraph::new("[y] Yes    [n] No")
+                .style(Style::default().fg(Color::DarkGray));
+            f.render_widget(hint, layout[1]);
+        }
+
+        Dialog::Error { title, message } => {
+            let block = Block::default()
+                .title(format!(" {} ", title))
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(Color::Yellow));
+
+            let inner = block.inner(popup);
+            f.render_widget(block, popup);
+
+            let text = Paragraph::new(message.as_str())
+                .style(Style::default().fg(Color::Red));
+
             f.render_widget(text, inner);
         }
 
-        _ => {}
+        Dialog::None => {}
     }
 }
-

@@ -118,13 +118,24 @@ fn handle_dialog(app: &mut App, key: KeyCode) {
             }
         }
 
+        Dialog::Error { .. } => {
+            match key {
+                KeyCode::Esc | KeyCode::Enter => {
+                    app.dialog = Dialog::None;
+                }
+                _ => {}
+            }
+        }
+
         Dialog::None => {}
     }
 
     if let Some((action, value)) = action_to_run {
         match action {
             InputAction::CreatingSnapshot => {
-                let _ = app.submit_snapshot_with_name(value);
+                if let Err(e) = app.submit_snapshot_with_name(value) {
+                    app.show_error(e);
+                }
             }
             InputAction::RenamingDataset => {
                 let _ = app.submit_rename_with_name(value);
