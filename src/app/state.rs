@@ -10,16 +10,11 @@ pub struct App {
     pub nav: Nav,
     pub focus: Focus,
 
-    pub input: InputState,
+    pub dialog: Dialog,
+
     pub zfs: ZfsState,
     pub network: NetworkState,
     pub system: SystemState,
-}
-
-pub struct InputState {
-    pub mode: InputMode,
-    pub action: Option<InputAction>,
-    pub buffer: String,
 }
 
 pub struct ZfsState {
@@ -52,17 +47,11 @@ pub struct SystemState {
     pub arc_history: Vec<u64>,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy)]
-pub enum InputMode {
-    Normal,
-    Editing
-}
-
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum InputAction {
-    CreatingSnapshot,
-    DestroyingSnapshot,
     RenamingDataset,
+    CreatingSnapshot,
+    DestroyingSnapshot
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -85,3 +74,25 @@ pub enum NetworkSort {
     Mtu,
 }
 
+#[derive(Clone)]
+pub enum Dialog {
+    None,
+
+    Input {
+        title: String,
+        label: String,
+        buffer: String,
+        action: InputAction,
+    },
+
+    Confirm {
+        title: String,
+        message: String,
+        action: ConfirmAction,
+    },
+}
+
+#[derive(Clone)]
+pub enum ConfirmAction {
+    DestroySnapshot(String),
+}

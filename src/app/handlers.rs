@@ -1,11 +1,14 @@
 use crossterm::event::KeyCode;
-use crate::app::{App, InputMode, InputAction, Nav, Focus, NetworkSort};
+use crate::app::{App, InputAction, Nav, Focus, NetworkSort};
+use crate::app::state::{Dialog, ConfirmAction};
 
 pub fn handle_key(app: &mut App, key: KeyCode) {
-    match app.input.mode {
-        InputMode::Normal => handle_normal_mode(app, key),
-        InputMode::Editing => handle_input_mode(app, key),
+    if !matches!(app.dialog, Dialog::None) {
+        handle_dialog(app, key);
+        return;
     }
+
+    handle_normal_mode(app, key);
 }
 
 fn handle_normal_mode(app: &mut App, key: KeyCode) {
@@ -34,14 +37,40 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
 
         KeyCode::Char('c')
             if app.focus == Focus::Right && app.nav == Nav::Datasets
-        => app.start_create_snapshot(),
+        => {
+            app.dialog = Dialog::Input {
+                title: "New Snapshot".into(),
+                label: "Name".into(),
+                buffer: String::new(),
+                action: InputAction::CreatingSnapshot,
+            }
+        },
         KeyCode::Char('d')
             if app.focus == Focus::Right && app.nav == Nav::Snapshots
-        => app.start_destroy_snapshot(),
+        => {
+            if let Some(i) = app.zfs.snapshot_state.selected() {
+                if let Some(snap) = app.zfs.snapshots.get(i) {
+                    app.dialog = Dialog::Confirm {
+                        title: "Destroy Snapshot".into(),
+                        message: format!("Destroy {} ?", snap.name),
+                        action: ConfirmAction::DestroySnapshot(snap.name.clone()),
+                    }
+                }
+            }
+        },
 
         KeyCode::Char('r')
             if app.focus == Focus::Right && app.nav == Nav::Datasets
-        => app.start_rename_dataset(),
+        => {
+            if let Some(name) = app.zfs.selected_dataset_name() {
+                app.dialog = Dialog::Input {
+                    title: "Rename Dataset".into(),
+                    label: "New name".into(),
+                    buffer: name,
+                    action: InputAction::RenamingDataset,
+                };
+            }
+        },
 
         KeyCode::Char('n') if app.nav == Nav::Network => {
             app.network.sort = NetworkSort::Name;
@@ -61,21 +90,50 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
     }
 }
 
-fn handle_input_mode(app: &mut App, key: KeyCode) {
-    match key {
-        KeyCode::Enter => {
-            if let Some(action) = app.input.action {
-                let _ = match action {
-                    InputAction::CreatingSnapshot => app.submit_snapshot(),
-                    InputAction::RenamingDataset => app.submit_rename(),
-                    InputAction::DestroyingSnapshot => app.submit_destroy_snapshot(),
-                };
-                app.reset_input();
+fn handle_dialog(app: &mut App, key: KeyCode) {
+    let mut action_to_run = None;
+
+    match &mut app.dialog {
+        Dialog::Input { buffer, action, .. } => {
+            match key {
+                KeyCode::Enter => {
+                    action_to_run = Some((*action, buffer.clone()));
+                    app.dialog = Dialog::None;
+                }
+                KeyCode::Esc => app.dialog = Dialog::None,
+                KeyCode::Char(c) => buffer.push(c),
+                KeyCode::Backspace => { buffer.pop(); }
+                _ => {}
             }
         }
-        KeyCode::Esc => app.reset_input(),
-        KeyCode::Char(c) => app.input.buffer.push(c),
-        KeyCode::Backspace => { app.input.buffer.pop(); }
-        _ => {}
+
+        Dialog::Confirm { action, .. } => {
+            if let KeyCode::Char('y') = key {
+                action_to_run = Some((InputAction::DestroyingSnapshot, match action {
+                    ConfirmAction::DestroySnapshot(name) => name.clone(),
+                }));
+                app.dialog = Dialog::None;
+            } else if matches!(key, KeyCode::Char('n') | KeyCode::Esc) {
+                app.dialog = Dialog::None;
+            }
+        }
+
+        Dialog::None => {}
+    }
+
+    if let Some((action, value)) = action_to_run {
+        match action {
+            InputAction::CreatingSnapshot => {
+                let _ = app.submit_snapshot_with_name(value);
+            }
+            InputAction::RenamingDataset => {
+                let _ = app.submit_rename_with_name(value);
+            }
+            InputAction::DestroyingSnapshot => {
+                let _ = app.submit_destroy_snapshot(value);
+            }
+        }
     }
 }
+
+

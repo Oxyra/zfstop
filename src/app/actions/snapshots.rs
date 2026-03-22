@@ -38,4 +38,11 @@ impl ZfsState {
         let i = self.snapshot_state.selected().unwrap_or(0);
         self.snapshot_state.select(Some(i.saturating_sub(1)));
     }
+
+    pub fn selected_snapshot_name(&self) -> Option<String> {
+        self.snapshot_state
+            .selected()
+            .and_then(|i| self.snapshots.get(i))
+            .map(|s| s.name.clone())
+    }
 }

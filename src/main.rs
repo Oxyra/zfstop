@@ -4,7 +4,9 @@ mod zfs;
 mod utils;
 mod net;
 
-use app::{App, InputMode};
+use app::App;
+use app::state::Dialog;
+
 use ui::draw;
 
 use std::{io, time::Duration};
@@ -87,7 +89,7 @@ fn run_app(
             if let Event::Key(key) = event::read()? {
                 let mut app = app.lock().unwrap();
 
-                if app.input.mode == InputMode::Normal && key.code == KeyCode::Char('q') {
+                if matches!(app.dialog, Dialog::None) && key.code == KeyCode::Char('q') {
                     return Ok(());
                 }
 

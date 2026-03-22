@@ -1,5 +1,5 @@
-use crate::app::{App, Nav, Focus, InputMode, NetworkSort};
-use crate::app::state::{ZfsState, SystemState, NetworkState, InputState};
+use crate::app::{App, Nav, Focus, NetworkSort};
+use crate::app::state::{ZfsState, SystemState, NetworkState, Dialog};
 use crate::zfs::pools::list_pools;
 use crate::zfs::arc::get_arc_stats;
 use crate::net::list_interfaces;
@@ -31,19 +31,14 @@ impl App {
         let mut share_state = TableState::default();
         share_state.select(Some(0));
 
-
         let init = (arc.hit_ratio() * 10.0) as u64;
 
         Self {
             nav: Nav::Datasets,
             focus: Focus::Left,
-            
-            input: InputState {
-                mode: InputMode::Normal,
-                action: None,
-                buffer: String::new(),
-            },
 
+            dialog: Dialog::None,
+            
             zfs: ZfsState {
                 pools,
                 pool_state,

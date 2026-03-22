@@ -10,10 +10,9 @@ pub mod shares;
 pub mod network;
 
 use ratatui::{Frame, layout::*};
-use ratatui::widgets::{Block, Borders, BorderType, Paragraph, Clear, Padding};
-use ratatui::style::{Style, Color};
-use ratatui::text::{Span, Line};
-use crate::app::{App, Nav, InputMode, InputAction};
+use ratatui::widgets::{Block, Borders, BorderType, Paragraph, Clear};
+use crate::app::{App, Nav};
+use crate::app::state::Dialog;
 
 use header::draw_header;
 use pools::draw_pools;
@@ -47,8 +46,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         draw_horizontal_layout(f, app, body_area);
     }
 
-    draw_snapshot_input_popup(f, app);
-    draw_rename_input_popup(f, app);
+    draw_dialog(f, app);
 }
 
 fn draw_horizontal_layout(f: &mut Frame, app: &mut App, area: Rect) {
@@ -115,107 +113,55 @@ fn draw_vertical_layout(f: &mut Frame, app: &mut App, area: Rect) {
     }
 }
 
-fn draw_snapshot_input_popup(f: &mut Frame, app: &App) {
-    if app.input.mode != InputMode::Editing
-        || app.input.action != Some(InputAction::CreatingSnapshot) {
+fn draw_dialog(f: &mut Frame, app: &App) {
+    if matches!(app.dialog, Dialog::None) {
         return;
     }
 
     let area = f.area();
-    let popup_width = 60;
-    let popup_height = 8;
-    let vertical_margin = (area.height.saturating_sub(popup_height)) / 2;
-    let horizontal_margin = (area.width.saturating_sub(popup_width)) / 2;
 
-    let popup_area = Rect::new(horizontal_margin, vertical_margin, popup_width, popup_height);
-
-    f.render_widget(Clear, popup_area); 
-
-    let dataset_name = app.zfs.datasets
-        .get(app.zfs.dataset_state.selected().unwrap_or(0))
-        .map(|d| d.name.as_str())
-        .unwrap_or("Unknown");
-
-    let block = Block::default()
-        .title(Line::from(" New Snapshot "))
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(Color::Cyan))
-        .padding(Padding::horizontal(2));
-
-    let inner = block.inner(popup_area);
-    f.render_widget(block, popup_area);
-
-    let chunks = Layout::vertical([
-        Constraint::Length(1),
-        Constraint::Length(1),
-        Constraint::Min(0),
-    ]).split(inner);
-
-    f.render_widget(
-        Paragraph::new(Line::from(vec![
-            Span::styled("For: ", Style::default().fg(Color::Indexed(244))),
-            Span::styled(dataset_name, Style::default().fg(Color::White).italic()),
-        ])),
-        chunks[0],
+    let popup = Rect::new(
+        area.width / 4,
+        area.height / 3,
+        area.width / 2,
+        7,
     );
 
-    f.render_widget(
-        Paragraph::new(Line::from(vec![
-            Span::styled("Name: ", Style::default().fg(Color::Indexed(244))),
-            Span::styled(&app.input.buffer, Style::default().fg(Color::Yellow).bold()),
-        ])),
-        chunks[1],
-    );
+    f.render_widget(Clear, popup);
 
-    f.set_cursor_position((
-        chunks[1].x + 6 + (app.input.buffer.len() as u16),
-        chunks[1].y,
-    ));
-}
+    match &app.dialog {
+        Dialog::Input { title, label, buffer, .. } => {
+            let block = Block::default()
+                .title(title.as_str())
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded);
 
-fn draw_rename_input_popup(f: &mut Frame, app: &App) {
-    if app.input.mode != InputMode::Editing
-        || app.input.action != Some(InputAction::RenamingDataset) {
-        return;
+            let inner = block.inner(popup);
+            f.render_widget(block, popup);
+
+            let text = Paragraph::new(format!("{}: {}", label, buffer));
+            f.render_widget(text, inner);
+
+            f.set_cursor_position((
+                inner.x + label.len() as u16 + 2 + buffer.len() as u16,
+                inner.y,
+            ));
+        }
+
+        Dialog::Confirm { title, message, .. } => {
+            let block = Block::default()
+                .title(title.as_str())
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded);
+
+            let inner = block.inner(popup);
+            f.render_widget(block, popup);
+
+            let text = Paragraph::new(format!("{}\n\n[y] Yes  [n] No", message));
+            f.render_widget(text, inner);
+        }
+
+        _ => {}
     }
-
-    let area = f.area();
-    let popup_width = 60;
-    let popup_height = 8;
-    let vertical_margin = (area.height.saturating_sub(popup_height)) / 2;
-    let horizontal_margin = (area.width.saturating_sub(popup_width)) / 2;
-    let popup_area = Rect::new(horizontal_margin, vertical_margin, popup_width, popup_height);
-
-    f.render_widget(Clear, popup_area);
-
-    let block = Block::default()
-        .title(Line::from(" Rename Dataset "))
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(Color::Yellow))
-        .padding(Padding::horizontal(2));
-
-    let inner = block.inner(popup_area);
-    f.render_widget(block, popup_area);
-
-    let chunks = Layout::vertical([
-        Constraint::Length(1),
-        Constraint::Length(1),
-        Constraint::Min(0),
-    ]).split(inner);
-
-    let label = "Rename to: ";
-    f.render_widget(
-        Paragraph::new(Line::from(vec![
-            Span::styled(label, Style::default().fg(Color::Indexed(244))),
-            Span::styled(&app.input.buffer, Style::default().fg(Color::Yellow).bold()),
-        ])),
-        chunks[1],
-    );
-    
-    f.set_cursor_position((
-        chunks[1].x + 11 + (app.input.buffer.len() as u16),
-        chunks[1].y,
-    ));
 }
+

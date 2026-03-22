@@ -13,7 +13,6 @@ pub use self::state::{
     App, 
     Nav, 
     Focus, 
-    InputMode, 
     InputAction,
     NetworkSort
 };
@@ -58,63 +57,25 @@ impl App {
         handlers::handle_key(self, key);
     }
 
-    pub fn reset_input(&mut self) {
-        self.input.mode = InputMode::Normal;
-        self.input.action = None;
-        self.input.buffer.clear();
-    }
-    
-    pub fn start_create_snapshot(&mut self) {
-        self.input.buffer.clear();
-        self.input.mode = InputMode::Editing;
-        self.input.action = Some(InputAction::CreatingSnapshot);
+    pub fn submit_destroy_snapshot(&mut self, name: String) -> Result<(), String> {
+        destroy_snapshot(&name)?;
+        self.zfs.load_snapshots();
+        Ok(())
     }
 
-    pub fn start_destroy_snapshot(&mut self) {
-        self.input.mode = InputMode::Editing;
-        self.input.action = Some(InputAction::DestroyingSnapshot);
-        self.input.buffer.clear();
-    }
-
-    pub fn submit_destroy_snapshot(&mut self) -> Result<(), String> {
-        if let Some(snapshot) = self.zfs.selected_snapshot_name() {
-            destroy_snapshot(&snapshot)?;
-
-            self.zfs.load_snapshots();
-
-            Ok(())
-        } else {
-            Err("No snapshot selected".into())
-        }
-    }
-
-    pub fn submit_snapshot(&mut self) -> Result<(), String> {
+    pub fn submit_snapshot_with_name(&mut self, name: String) -> Result<(), String> {
         if let Some(dataset) = self.zfs.selected_dataset_name() {
-            create_snapshot(&dataset, &self.input.buffer)?;
-            self.input.mode = InputMode::Normal;
-            self.input.buffer.clear();
+            create_snapshot(&dataset, &name)?;
+            self.zfs.load_snapshots();
             Ok(())
         } else {
             Err("No dataset selected".into())
         }
     }
     
-    pub fn start_rename_dataset(&mut self) {
-        if let Some(name) = self.zfs.selected_dataset_name() {
-            self.input.buffer = name;
-            self.input.mode = InputMode::Editing;
-            self.input.action = Some(InputAction::RenamingDataset);
-        }
-    }
-    
-    pub fn submit_rename(&mut self) -> Result<(), String> {
+    pub fn submit_rename_with_name(&mut self, new_name: String) -> Result<(), String> {
         if let Some(old_name) = self.zfs.selected_dataset_name() {
-            let new_name = self.input.buffer.trim().to_string();
-
             println!("Renaming {} to {}", old_name, new_name);
-            
-            self.input.mode = InputMode::Normal;
-            self.input.buffer.clear();
             self.zfs.load_datasets();
             Ok(())
         } else {
