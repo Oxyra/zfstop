@@ -20,6 +20,7 @@ pub use self::state::{
 use crate::app::view::ActiveView;
 use crate::app::state::Dialog;
 use crate::zfs::snapshots::{create_snapshot, destroy_snapshot};
+use crate::zfs::scrub::{start_scrub, get_scrub_status};
 use crossterm::event::KeyCode;
 
 impl App {
@@ -88,6 +89,19 @@ impl App {
             Ok(())
         } else {
             Err("No dataset selected".into())
+        }
+    }
+
+    pub fn submit_start_scrub(&mut self) -> Result<(), String> {
+        if let Some(i) = self.zfs.pool_state.selected() {
+            let pool = self.zfs.pools[i].name.clone();
+
+            start_scrub(&pool)?;
+            self.zfs.scrub = get_scrub_status(&pool);
+
+            Ok(())
+        } else {
+            Err("No pool selected".into())
         }
     }
 }

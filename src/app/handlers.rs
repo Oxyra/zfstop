@@ -84,6 +84,14 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
             app.network.sort = NetworkSort::Mtu;
             app.network.sort_interfaces();
         }
+
+        KeyCode::Char('S') if app.nav == Nav::Scrub || app.nav == Nav::PoolStatus => {
+            if let Some(i) = app.zfs.pool_state.selected() {
+                let pool = app.zfs.pools[i].name.clone();
+
+                let _ = app.submit_start_scrub();
+            }
+        }
         
         KeyCode::Esc => app.back(),
         _ => {}
