@@ -35,6 +35,10 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
         KeyCode::Char('c')
             if app.focus == Focus::Right && app.nav == Nav::Datasets
         => app.start_create_snapshot(),
+        KeyCode::Char('d')
+            if app.focus == Focus::Right && app.nav == Nav::Snapshots
+        => app.start_destroy_snapshot(),
+
         KeyCode::Char('r')
             if app.focus == Focus::Right && app.nav == Nav::Datasets
         => app.start_rename_dataset(),
@@ -64,6 +68,7 @@ fn handle_input_mode(app: &mut App, key: KeyCode) {
                 let _ = match action {
                     InputAction::CreatingSnapshot => app.submit_snapshot(),
                     InputAction::RenamingDataset => app.submit_rename(),
+                    InputAction::DestroyingSnapshot => app.submit_destroy_snapshot(),
                 };
                 app.reset_input();
             }

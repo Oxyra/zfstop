@@ -45,8 +45,8 @@ pub fn list_snapshots(dataset: &str) -> Vec<Snapshot> {
 }
 
 pub fn create_snapshot(dataset: &str, name: &str) -> Result<(), String> {
-    let output = std::process::Command::new("zfs")
-        .args(["snapshot", &format!("{}@{}", dataset, name)])
+    let output = std::process::Command::new("sudo")
+        .args(["/usr/sbin/zfs", "snapshot", &format!("{}@{}", dataset, name)])
         .output()
         .map_err(|e| e.to_string())?;
 
@@ -55,5 +55,18 @@ pub fn create_snapshot(dataset: &str, name: &str) -> Result<(), String> {
     } else {
         let err = String::from_utf8_lossy(&output.stderr);
         Err(err.trim().to_string())
+    }
+}
+
+pub fn destroy_snapshot(name: &str) -> Result<(), String> {
+    let output = Command::new("sudo")
+        .args(["/usr/sbin/zfs", "destroy", name])
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).trim().to_string())
     }
 }

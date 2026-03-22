@@ -19,7 +19,7 @@ pub use self::state::{
 };
 
 use crate::app::view::ActiveView;
-use crate::zfs::snapshots::create_snapshot;
+use crate::zfs::snapshots::{create_snapshot, destroy_snapshot};
 use crossterm::event::KeyCode;
 
 impl App {
@@ -68,6 +68,24 @@ impl App {
         self.input.buffer.clear();
         self.input.mode = InputMode::Editing;
         self.input.action = Some(InputAction::CreatingSnapshot);
+    }
+
+    pub fn start_destroy_snapshot(&mut self) {
+        self.input.mode = InputMode::Editing;
+        self.input.action = Some(InputAction::DestroyingSnapshot);
+        self.input.buffer.clear();
+    }
+
+    pub fn submit_destroy_snapshot(&mut self) -> Result<(), String> {
+        if let Some(snapshot) = self.zfs.selected_snapshot_name() {
+            destroy_snapshot(&snapshot)?;
+
+            self.zfs.load_snapshots();
+
+            Ok(())
+        } else {
+            Err("No snapshot selected".into())
+        }
     }
 
     pub fn submit_snapshot(&mut self) -> Result<(), String> {

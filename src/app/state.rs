@@ -61,7 +61,8 @@ pub enum InputMode {
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum InputAction {
     CreatingSnapshot,
-    RenamingDataset
+    DestroyingSnapshot,
+    RenamingDataset,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
