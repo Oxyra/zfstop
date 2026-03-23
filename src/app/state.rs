@@ -84,6 +84,10 @@ pub enum Dialog {
         title: String,
         message: String,
     },
+    Info {
+        title: String,
+        message: String,
+    }
 }
 
 #[derive(Debug, Clone)]

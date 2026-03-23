@@ -201,6 +201,22 @@ fn draw_dialog(f: &mut Frame, app: &App) {
             f.render_widget(text, inner);
         }
 
+        Dialog::Info { title, message } => {
+            let block = Block::default()
+                .title(format!(" {} ", title))
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(Color::Blue));
+
+            let inner = block.inner(popup);
+            f.render_widget(block, popup);
+
+            let text = Paragraph::new(message.as_str())
+                .style(Style::default().fg(Color::White));
+
+            f.render_widget(text, inner);
+        }
+
         Dialog::None => {}
     }
 }

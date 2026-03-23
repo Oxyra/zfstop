@@ -98,7 +98,6 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
         KeyCode::Char('S') if app.nav == Nav::Scrub || app.nav == Nav::PoolStatus => {
             if let Some(i) = app.zfs.pool_state.selected() {
                 let pool_name = app.zfs.pools[i].name.clone();
-
                 app.dispatch(Action::StartScrub { pool: pool_name });
             }
         }
@@ -121,7 +120,6 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
 }
 
 fn handle_dialog(app: &mut App, key: KeyCode) {
-
     match &mut app.dialog {
         Dialog::Input { buffer, on_confirm, .. } => {
             match key {
@@ -149,6 +147,15 @@ fn handle_dialog(app: &mut App, key: KeyCode) {
         }
 
         Dialog::Error { .. } => {
+            match key {
+                KeyCode::Esc | KeyCode::Enter => {
+                    app.dialog = Dialog::None;
+                }
+                _ => {}
+            }
+        }
+
+        Dialog::Info { .. } => {
             match key {
                 KeyCode::Esc | KeyCode::Enter => {
                     app.dialog = Dialog::None;

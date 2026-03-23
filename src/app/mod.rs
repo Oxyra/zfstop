@@ -75,9 +75,19 @@ impl App {
             }
 
             Action::StartScrub { pool } => {
-                start_scrub(&pool).map(|_| {
-                    self.zfs.scrub = get_scrub_status(&pool);
-                })
+                match start_scrub(&pool) {
+                    Ok(_) => {
+                        self.zfs.scrub = get_scrub_status(&pool);
+
+                        self.dialog = Dialog::Info {
+                            title: "Scrub Started".into(),
+                            message: format!("Scrub started on pool {}", pool),
+                        };
+
+                        Ok(())
+                    }
+                    Err(e) => Err(e),
+                }
             }
 
             Action::StopScrub { pool } => {
