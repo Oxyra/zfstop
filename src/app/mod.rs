@@ -104,45 +104,6 @@ impl App {
             message: msg,
         };
     }
-
-    pub fn submit_destroy_snapshot(&mut self, name: String) -> Result<(), String> {
-        destroy_snapshot(&name)?;
-        self.zfs.load_snapshots();
-        Ok(())
-    }
-
-    pub fn submit_snapshot_with_name(&mut self, name: String) -> Result<(), String> {
-        if let Some(dataset) = self.zfs.selected_dataset_name() {
-            create_snapshot(&dataset, &name)?;
-            self.zfs.load_snapshots();
-            Ok(())
-        } else {
-            Err("No dataset selected".into())
-        }
-    }
-    
-    pub fn submit_rename_with_name(&mut self, new_name: String) -> Result<(), String> {
-        if let Some(old_name) = self.zfs.selected_dataset_name() {
-            println!("Renaming {} to {}", old_name, new_name);
-            self.zfs.load_datasets();
-            Ok(())
-        } else {
-            Err("No dataset selected".into())
-        }
-    }
-
-    pub fn submit_start_scrub(&mut self) -> Result<(), String> {
-        if let Some(i) = self.zfs.pool_state.selected() {
-            let pool = self.zfs.pools[i].name.clone();
-
-            start_scrub(&pool)?;
-            self.zfs.scrub = get_scrub_status(&pool);
-
-            Ok(())
-        } else {
-            Err("No pool selected".into())
-        }
-    }
 }
 
 
