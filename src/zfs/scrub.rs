@@ -25,6 +25,19 @@ pub fn start_scrub(pool: &str) -> Result<(), String> {
     }
 }
 
+pub fn stop_scrub(pool: &str) -> Result<(), String> {
+    let output = Command::new("sudo")
+        .args(["zpool", "scrub", "-s", pool])
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).trim().to_string())
+    }
+}
+
 pub fn get_scrub_status(pool: &str) -> Option<ScrubStatus> {
     let output = Command::new("zpool")
         .args(["status", pool])
