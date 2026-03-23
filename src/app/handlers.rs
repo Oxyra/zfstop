@@ -1,6 +1,5 @@
 use crossterm::event::KeyCode;
-use crate::app::{App, InputAction, Nav, Focus, NetworkSort};
-use crate::app::state::{Dialog, ConfirmAction};
+use crate::app::{App, Nav, Focus, NetworkSort, Action, Dialog};
 
 pub fn handle_key(app: &mut App, key: KeyCode) {
     if !matches!(app.dialog, Dialog::None) {
@@ -38,11 +37,16 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
         KeyCode::Char('c')
             if app.focus == Focus::Right && app.nav == Nav::Datasets
         => {
-            app.dialog = Dialog::Input {
-                title: "New Snapshot".into(),
-                label: "Name".into(),
-                buffer: String::new(),
-                action: InputAction::CreatingSnapshot,
+            if let Some(ds_name) = app.zfs.selected_dataset_name() {
+                app.dialog = Dialog::Input {
+                    title: "New Snapshot".into(),
+                    label: "Name".into(),
+                    buffer: String::new(),
+                    on_confirm: Box::new(move |name| Action::CreateSnapshot {
+                        dataset: ds_name.clone(),
+                        name
+                    }),
+                };
             }
         },
         KeyCode::Char('d')
@@ -53,7 +57,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
                     app.dialog = Dialog::Confirm {
                         title: "Destroy Snapshot".into(),
                         message: format!("Destroy {} ?", snap.name),
-                        action: ConfirmAction::DestroySnapshot(snap.name.clone()),
+                        action: Action::DestroySnapshot { name: snap.name.clone() },
                     }
                 }
             }
@@ -63,11 +67,17 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
             if app.focus == Focus::Right && app.nav == Nav::Datasets
         => {
             if let Some(name) = app.zfs.selected_dataset_name() {
+                let old_name = name.clone();
                 app.dialog = Dialog::Input {
                     title: "Rename Dataset".into(),
                     label: "New name".into(),
                     buffer: name,
-                    action: InputAction::RenamingDataset,
+                    on_confirm: Box::new(move |new_name| {
+                        Action::RenameDataset {
+                            old_name: old_name.clone(),
+                            new_name: new_name
+                        }
+                    }),
                 };
             }
         },
@@ -87,9 +97,9 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
 
         KeyCode::Char('S') if app.nav == Nav::Scrub || app.nav == Nav::PoolStatus => {
             if let Some(i) = app.zfs.pool_state.selected() {
-                let pool = app.zfs.pools[i].name.clone();
+                let pool_name = app.zfs.pools[i].name.clone();
 
-                let _ = app.submit_start_scrub();
+                app.dispatch(Action::StartScrub { pool: pool_name });
             }
         }
         
@@ -99,14 +109,15 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
 }
 
 fn handle_dialog(app: &mut App, key: KeyCode) {
-    let mut action_to_run = None;
 
     match &mut app.dialog {
-        Dialog::Input { buffer, action, .. } => {
+        Dialog::Input { buffer, on_confirm, .. } => {
             match key {
                 KeyCode::Enter => {
-                    action_to_run = Some((*action, buffer.clone()));
+                    let input = std::mem::take(buffer);
+                    let action = on_confirm(input);
                     app.dialog = Dialog::None;
+                    app.dispatch(action);
                 }
                 KeyCode::Esc => app.dialog = Dialog::None,
                 KeyCode::Char(c) => buffer.push(c),
@@ -117,10 +128,9 @@ fn handle_dialog(app: &mut App, key: KeyCode) {
 
         Dialog::Confirm { action, .. } => {
             if let KeyCode::Char('y') = key {
-                action_to_run = Some((InputAction::DestroyingSnapshot, match action {
-                    ConfirmAction::DestroySnapshot(name) => name.clone(),
-                }));
+                let action = action.clone();
                 app.dialog = Dialog::None;
+                app.dispatch(action);
             } else if matches!(key, KeyCode::Char('n') | KeyCode::Esc) {
                 app.dialog = Dialog::None;
             }
@@ -136,22 +146,6 @@ fn handle_dialog(app: &mut App, key: KeyCode) {
         }
 
         Dialog::None => {}
-    }
-
-    if let Some((action, value)) = action_to_run {
-        match action {
-            InputAction::CreatingSnapshot => {
-                if let Err(e) = app.submit_snapshot_with_name(value) {
-                    app.show_error(e);
-                }
-            }
-            InputAction::RenamingDataset => {
-                let _ = app.submit_rename_with_name(value);
-            }
-            InputAction::DestroyingSnapshot => {
-                let _ = app.submit_destroy_snapshot(value);
-            }
-        }
     }
 }
 

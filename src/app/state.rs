@@ -48,13 +48,6 @@ pub struct SystemState {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum InputAction {
-    RenamingDataset,
-    CreatingSnapshot,
-    DestroyingSnapshot
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Focus { Left, Right }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -74,30 +67,30 @@ pub enum NetworkSort {
     Mtu,
 }
 
-#[derive(Clone)]
 pub enum Dialog {
     None,
-
     Input {
         title: String,
         label: String,
         buffer: String,
-        action: InputAction,
+        on_confirm: Box<dyn Fn(String) -> Action + Send + Sync>,
     },
-
     Confirm {
         title: String,
         message: String,
-        action: ConfirmAction,
+        action: Action,
     },
-
     Error {
         title: String,
         message: String,
     },
 }
 
-#[derive(Clone)]
-pub enum ConfirmAction {
-    DestroySnapshot(String),
+#[derive(Debug, Clone)]
+pub enum Action {
+    CreateSnapshot { dataset: String, name: String },
+    RenameDataset { old_name: String, new_name: String },
+    DestroySnapshot { name: String },
+    StartScrub { pool: String },
+    ChangeNav(Nav),
 }

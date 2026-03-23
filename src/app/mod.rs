@@ -13,12 +13,12 @@ pub use self::state::{
     App, 
     Nav, 
     Focus, 
-    InputAction,
-    NetworkSort
+    NetworkSort,
+    Action,
+    Dialog,
 };
 
 use crate::app::view::ActiveView;
-use crate::app::state::Dialog;
 use crate::zfs::snapshots::{create_snapshot, destroy_snapshot};
 use crate::zfs::scrub::{start_scrub, get_scrub_status};
 use crossterm::event::KeyCode;
@@ -57,6 +57,35 @@ impl App {
 
     pub fn map_key(&mut self, key: KeyCode) {
         handlers::handle_key(self, key);
+    }
+
+    pub fn dispatch(&mut self, action: Action) {
+        let result = match action {
+            Action::CreateSnapshot { dataset, name } => {
+                create_snapshot(&dataset, &name).map(|_| self.zfs.load_snapshots())
+            }
+            Action::RenameDataset { old_name, new_name } => {
+                println!("Renaming {} to {}", old_name, new_name);
+                Ok(()) 
+            }
+            Action::DestroySnapshot { name } => {
+                destroy_snapshot(&name).map(|_| self.zfs.load_snapshots())
+            }
+            Action::StartScrub { pool } => {
+                start_scrub(&pool).map(|_| {
+                    self.zfs.scrub = get_scrub_status(&pool);
+                })
+            }
+            Action::ChangeNav(nav) => {
+                self.nav = nav;
+                self.focus = Focus::Right;
+                Ok(())
+            }
+        };
+
+        if let Err(e) = result {
+            self.show_error(e);
+        }
     }
 
     pub fn show_error(&mut self, msg: String) {
