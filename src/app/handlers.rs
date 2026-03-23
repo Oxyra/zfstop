@@ -102,6 +102,18 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
                 app.dispatch(Action::StartScrub { pool: pool_name });
             }
         }
+
+        KeyCode::Char('X') if app.nav == Nav::Scrub || app.nav == Nav::PoolStatus => {
+            if let Some(i) = app.zfs.pool_state.selected() {
+                let pool_name = app.zfs.pools[i].name.clone();
+
+                app.dialog = Dialog::Confirm {
+                    title: "Stop Scrub".into(),
+                    message: format!("Are you sure you want to stop the scrub on {}?", pool_name),
+                    action: Action::StopScrub { pool: pool_name },
+                };
+            }
+        }
         
         KeyCode::Esc => app.back(),
         _ => {}

@@ -20,7 +20,7 @@ pub use self::state::{
 
 use crate::app::view::ActiveView;
 use crate::zfs::snapshots::{create_snapshot, destroy_snapshot};
-use crate::zfs::scrub::{start_scrub, get_scrub_status};
+use crate::zfs::scrub::{start_scrub, stop_scrub, get_scrub_status};
 use crossterm::event::KeyCode;
 
 impl App {
@@ -64,18 +64,28 @@ impl App {
             Action::CreateSnapshot { dataset, name } => {
                 create_snapshot(&dataset, &name).map(|_| self.zfs.load_snapshots())
             }
+            
             Action::RenameDataset { old_name, new_name } => {
                 println!("Renaming {} to {}", old_name, new_name);
                 Ok(()) 
             }
+            
             Action::DestroySnapshot { name } => {
                 destroy_snapshot(&name).map(|_| self.zfs.load_snapshots())
             }
+
             Action::StartScrub { pool } => {
                 start_scrub(&pool).map(|_| {
                     self.zfs.scrub = get_scrub_status(&pool);
                 })
             }
+
+            Action::StopScrub { pool } => {
+                stop_scrub(&pool).map(|_| {
+                    self.zfs.scrub = get_scrub_status(&pool);
+                })
+            }
+
             Action::ChangeNav(nav) => {
                 self.nav = nav;
                 self.focus = Focus::Right;

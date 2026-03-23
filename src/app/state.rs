@@ -92,5 +92,6 @@ pub enum Action {
     RenameDataset { old_name: String, new_name: String },
     DestroySnapshot { name: String },
     StartScrub { pool: String },
+    StopScrub { pool: String },
     ChangeNav(Nav),
 }
