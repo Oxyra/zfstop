@@ -1,4 +1,4 @@
-use crate::docker::types::DockerState;
+use crate::app::state::DockerState;
 use ratatui::widgets::{Table, Row, Block, Borders, BorderType};
 use ratatui::layout::{Constraint, Rect};
 use ratatui::Frame;

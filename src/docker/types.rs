@@ -1,4 +1,3 @@
-use ratatui::widgets::TableState;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
@@ -11,9 +10,4 @@ pub struct DockerContainer {
     pub Ports: String,
     #[serde(rename = "Names")]
     pub Name: String,
-}
-
-pub struct DockerState {
-    pub containers: Vec<DockerContainer>,
-    pub container_state: TableState,
 }

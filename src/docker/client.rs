@@ -1,5 +1,6 @@
 use std::process::Command;
-use crate::docker::types::{DockerContainer, DockerState};
+use crate::docker::types::{DockerContainer};
+use crate::app::state::{DockerState};
 use serde_json::from_str;
 
 impl DockerState {
@@ -58,5 +59,11 @@ pub fn docker_remove(id: &str) -> Result<(), String> {
         .output()
         .map_err(|e| e.to_string())?;
     Ok(())
+}
+
+fn docker_cmd(args: &[&str]) -> Command {
+    let mut cmd = Command::new("docker");
+    cmd.args(args);
+    cmd
 }
 

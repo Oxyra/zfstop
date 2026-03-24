@@ -1,5 +1,4 @@
-use crate::app::state::{ZfsState, NetworkState};
-use crate::docker::types::{DockerState};
+use crate::app::state::{ZfsState, NetworkState, DockerState};
 
 pub enum ActiveView<'a> {
     Datasets(&'a mut ZfsState),

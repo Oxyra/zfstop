@@ -5,7 +5,7 @@ use crate::zfs::scrub::ScrubStatus;
 use crate::zfs::snapshots::Snapshot;
 use crate::net::Interface;
 use ratatui::widgets::TableState;
-use crate::docker::types::DockerState;
+use crate::docker::types::DockerContainer;
 
 pub struct App {
     pub nav: Nav,
@@ -40,6 +40,11 @@ pub struct NetworkState {
     pub interfaces: Vec<Interface>,
     pub interface_state: TableState,
     pub sort: NetworkSort,
+}
+
+pub struct DockerState {
+    pub containers: Vec<DockerContainer>,
+    pub container_state: TableState,
 }
 
 pub struct SystemState {

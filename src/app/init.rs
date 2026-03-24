@@ -1,10 +1,9 @@
 use crate::app::{App, Nav, Focus, NetworkSort};
-use crate::app::state::{ZfsState, SystemState, NetworkState, Dialog};
+use crate::app::state::{ZfsState, SystemState, NetworkState, DockerState, Dialog};
 use crate::zfs::pools::list_pools;
 use crate::zfs::arc::get_arc_stats;
 use crate::net::list_interfaces;
 use crate::docker::client::{list_containers};
-use crate::docker::types::DockerState;
 use ratatui::widgets::TableState;
 
 impl App {
