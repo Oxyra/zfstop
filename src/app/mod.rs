@@ -32,6 +32,7 @@ impl App {
             Nav::Shares => ActiveView::Shares(&mut self.zfs),
             Nav::PoolStatus => ActiveView::PoolStatus,
             Nav::Scrub => ActiveView::Scrub,
+            Nav::Docker => ActiveView::Docker(&mut self.docker),
         }
     }
 

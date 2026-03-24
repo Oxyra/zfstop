@@ -9,6 +9,7 @@ impl App {
             Nav::Network => Nav::Scrub,
             Nav::Scrub => Nav::Shares,
             Nav::Shares => Nav::Datasets,
+            Nav::Docker => Nav::Docker,
         };
     }
 
@@ -20,6 +21,7 @@ impl App {
             Nav::Network => Nav::PoolStatus,
             Nav::Scrub => Nav::Network,
             Nav::Shares => Nav::Scrub,
+            Nav::Docker => Nav::Docker,
         };
     }
 

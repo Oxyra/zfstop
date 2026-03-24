@@ -10,6 +10,10 @@ impl App {
             self.network.update_network();
         }
 
+        if matches!(self.nav, Nav::Docker) {
+            self.docker.refresh();
+        }
+
         for pool in &mut self.zfs.pools {
             pool.update_io();
         }

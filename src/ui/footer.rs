@@ -12,6 +12,7 @@ pub fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
         Nav::Shares => "Shares",
         Nav::Network => "Interfaces",
         Nav::PoolStatus => "Status",
+        Nav::Docker => "Docker",
     };
 
     let key_style = Style::default().fg(Color::Black).bg(Color::Yellow).bold();

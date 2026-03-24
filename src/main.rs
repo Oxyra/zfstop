@@ -3,6 +3,7 @@ mod ui;
 mod zfs;
 mod utils;
 mod net;
+mod docker;
 
 use app::App;
 use app::state::Dialog;

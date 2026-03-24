@@ -5,6 +5,7 @@ use crate::zfs::scrub::ScrubStatus;
 use crate::zfs::snapshots::Snapshot;
 use crate::net::Interface;
 use ratatui::widgets::TableState;
+use crate::docker::DockerState;
 
 pub struct App {
     pub nav: Nav,
@@ -14,6 +15,7 @@ pub struct App {
 
     pub zfs: ZfsState,
     pub network: NetworkState,
+    pub docker: DockerState,
     pub system: SystemState,
 }
 
@@ -58,6 +60,7 @@ pub enum Nav {
     Scrub,
     Shares,
     Network,
+    Docker,
 }
 
 #[derive(Clone, Copy)]

@@ -8,6 +8,7 @@ pub mod footer;
 pub mod header;
 pub mod shares;
 pub mod network;
+pub mod docker;
 
 use ratatui::{Frame, layout::*};
 use ratatui::widgets::{Block, Borders, BorderType, Paragraph, Clear};
@@ -25,6 +26,7 @@ use status::draw_status;
 use footer::draw_footer;
 use shares::draw_shares;
 use network::{draw_network, draw_network_details};
+use docker::{draw_docker, draw_docker_details};
 
 pub fn draw(f: &mut Frame, app: &mut App) {
     let area = f.area();
@@ -89,6 +91,15 @@ fn draw_horizontal_layout(f: &mut Frame, app: &mut App, area: Rect) {
             draw_network(f, app, right_layout[0]);
             draw_network_details(f, app, right_layout[1]);
         }
+        Nav::Docker     => {
+            let right_layout = Layout::vertical([
+                Constraint::Percentage(70),
+                Constraint::Percentage(30),
+            ]).split(chunks[1]);
+
+            draw_docker(f, &mut app.docker, right_layout[0]);
+            draw_docker_details(f, &app.docker, right_layout[1]);
+        }
     }
 }
 
@@ -111,6 +122,15 @@ fn draw_vertical_layout(f: &mut Frame, app: &mut App, area: Rect) {
         Nav::Scrub      => draw_scrub(f, app, chunks[3]),
         Nav::Shares     => draw_shares(f, app, chunks[3]),
         Nav::Network    => draw_network(f, app, chunks[3]),
+        Nav::Docker     => {
+            let right_layout = Layout::vertical([
+                Constraint::Percentage(70),
+                Constraint::Percentage(30),
+            ]).split(chunks[1]);
+
+            draw_docker(f, &mut app.docker, right_layout[0]);
+            draw_docker_details(f, &app.docker, right_layout[1]);
+        }
     }
 }
 

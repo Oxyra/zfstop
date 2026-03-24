@@ -3,6 +3,7 @@ use crate::app::state::{ZfsState, SystemState, NetworkState, Dialog};
 use crate::zfs::pools::list_pools;
 use crate::zfs::arc::get_arc_stats;
 use crate::net::list_interfaces;
+use crate::docker::{DockerState, list_containers};
 use ratatui::widgets::TableState;
 
 impl App {
@@ -56,6 +57,15 @@ impl App {
                 interfaces,
                 interface_state,
                 sort: NetworkSort::Name,
+            },
+
+            docker: DockerState {
+                containers: list_containers(),
+                container_state: {
+                    let mut s = TableState::default();
+                    s.select(Some(0));
+                    s
+                },
             },
 
             system: SystemState {

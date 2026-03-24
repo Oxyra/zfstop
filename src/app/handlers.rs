@@ -33,6 +33,7 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
         KeyCode::Char('4') => { app.nav = Nav::Network; app.focus = Focus::Right; },
         KeyCode::Char('5') => { app.nav = Nav::Scrub; app.focus = Focus::Right; },
         KeyCode::Char('6') => { app.nav = Nav::Shares; app.focus = Focus::Right; },
+        KeyCode::Char('7') => { app.nav = Nav::Docker; app.focus = Focus::Right; },
 
         KeyCode::Char('c')
             if app.focus == Focus::Right && app.nav == Nav::Datasets
