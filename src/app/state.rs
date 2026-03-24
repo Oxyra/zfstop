@@ -5,7 +5,7 @@ use crate::zfs::scrub::ScrubStatus;
 use crate::zfs::snapshots::Snapshot;
 use crate::net::Interface;
 use ratatui::widgets::TableState;
-use crate::docker::DockerState;
+use crate::docker::types::DockerState;
 
 pub struct App {
     pub nav: Nav,
@@ -101,4 +101,9 @@ pub enum Action {
     StartScrub { pool: String },
     StopScrub { pool: String },
     ChangeNav(Nav),
+
+    DockerStart { id: String },
+    DockerStop { id: String },
+    DockerRestart { id: String },
+    DockerRemove { id: String },
 }

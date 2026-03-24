@@ -9,6 +9,7 @@ pub mod system;
 
 pub mod actions;
 
+
 pub use self::state::{
     App, 
     Nav, 
@@ -21,6 +22,7 @@ pub use self::state::{
 use crate::app::view::ActiveView;
 use crate::zfs::snapshots::{create_snapshot, destroy_snapshot};
 use crate::zfs::scrub::{start_scrub, stop_scrub, get_scrub_status};
+use crate::docker::client::{docker_start, docker_stop, docker_restart, docker_remove};
 use crossterm::event::KeyCode;
 
 impl App {
@@ -100,6 +102,35 @@ impl App {
             Action::ChangeNav(nav) => {
                 self.nav = nav;
                 self.focus = Focus::Right;
+                Ok(())
+            }
+
+            Action::DockerStart { id } => {
+                std::thread::spawn(move || {
+                    let _ = docker_start(&id);
+                });
+                Ok(())
+            }
+
+            Action::DockerStop { id } => {
+                let id_clone = id.clone();
+
+                std::thread::spawn(move || {
+                    let _ = docker_stop(&id_clone);
+                });
+
+                Ok(())
+            }
+            Action::DockerRestart { id } => {
+                std::thread::spawn(move || {
+                    let _ = docker_restart(&id);
+                });
+                Ok(())
+            }
+            Action::DockerRemove { id } => {
+                std::thread::spawn(move || {
+                    let _ = docker_remove(&id);
+                });
                 Ok(())
             }
         };

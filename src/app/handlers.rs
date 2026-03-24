@@ -114,6 +114,49 @@ fn handle_normal_mode(app: &mut App, key: KeyCode) {
                 };
             }
         }
+
+        // Docker
+        KeyCode::Char('s')
+            if app.nav == Nav::Docker && app.focus == Focus::Right =>
+            {
+                if let Some(i) = app.docker.container_state.selected() {
+                    let id = app.docker.containers[i].ID.clone();
+                    app.dispatch(Action::DockerStop { id });
+                }
+            }
+
+        KeyCode::Char('S')
+            if app.nav == Nav::Docker && app.focus == Focus::Right =>
+            {
+                if let Some(i) = app.docker.container_state.selected() {
+                    let id = app.docker.containers[i].ID.clone();
+                    app.dispatch(Action::DockerStart { id });
+                }
+            }
+
+        KeyCode::Char('r')
+            if app.nav == Nav::Docker && app.focus == Focus::Right =>
+            {
+                if let Some(i) = app.docker.container_state.selected() {
+                    let id = app.docker.containers[i].ID.clone();
+                    app.dispatch(Action::DockerRestart { id });
+                }
+            }
+
+        KeyCode::Char('d')
+            if app.nav == Nav::Docker && app.focus == Focus::Right =>
+            {
+                if let Some(i) = app.docker.container_state.selected() {
+                    let c = &app.docker.containers[i];
+
+                    app.dialog = Dialog::Confirm {
+                        title: "Remove Container".into(),
+                        message: format!("Remove {} ?", c.Name),
+                        action: Action::DockerRemove { id: c.ID.clone() },
+                    };
+                }
+            }
+
         
         KeyCode::Esc => app.back(),
         _ => {}

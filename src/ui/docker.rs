@@ -1,4 +1,4 @@
-use crate::docker::DockerState;
+use crate::docker::types::DockerState;
 use ratatui::widgets::{Table, Row, Block, Borders, BorderType};
 use ratatui::layout::{Constraint, Rect};
 use ratatui::Frame;
@@ -6,10 +6,25 @@ use ratatui::prelude::*;
 use ratatui::widgets::*;
 
 pub fn draw_docker(f: &mut Frame, docker: &mut DockerState, area: Rect) {
+    if docker.containers.is_empty() {
+        let empty = Paragraph::new("No containers running")
+            .alignment(Alignment::Center)
+            .block(
+                Block::default()
+                .title(" Docker ")
+                .borders(Borders::ALL)
+            );
+
+        f.render_widget(empty, area);
+        return;
+    }
+
     let selected_idx = docker.container_state.selected().unwrap_or(0);
 
     let rows = docker.containers.iter().enumerate().map(|(i, c)| {
         let is_selected = i == selected_idx;
+
+        let short_id = &c.ID[..12.min(c.ID.len())];
 
         let status_style = if c.Status.contains("Up") {
             Style::default().fg(Color::Green)
@@ -29,6 +44,10 @@ pub fn draw_docker(f: &mut Frame, docker: &mut DockerState, area: Rect) {
             Cell::from(c.ID.clone()).style(Style::default().fg(Color::Indexed(244))),
             Cell::from(c.Image.clone()).style(name_style),
             Cell::from(c.Status.clone()).style(status_style),
+            Cell::from(Line::from(vec![
+                Span::styled("● ", status_style),
+                Span::raw(&c.Status),
+            ])),
             Cell::from(Line::from(c.Ports.clone()).alignment(Alignment::Right)),
             Cell::from(format!(" {}", c.Name)).style(Style::default().fg(Color::Indexed(244))),
         ])
